@@ -3,7 +3,7 @@ class_name SpineSpriteDefinition
 extends Resource
 
 const SpineSkeletonResource = preload("SpineSkeletonResource.gd")
-const SpineAtlas = preload("SpineAtlas.gd")
+const SpineAtlasResource = preload("SpineAtlasResource.gd")
 
 @export var skeleton:SpineSkeletonResource
-@export var atlas:SpineAtlas
+@export var atlas:SpineAtlasResource

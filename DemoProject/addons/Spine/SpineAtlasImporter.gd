@@ -35,6 +35,11 @@ func _import( source_filepath:String, save_path:String, options:Dictionary, plat
 	if FileAccess.file_exists(source_filepath):
 		var resource = preload( "SpineAtlasResource.gd" ).new()
 		resource.bytes = FileAccess.get_file_as_bytes( source_filepath )
+		var png_filepath = source_filepath.get_basename() + ".png"
+		if FileAccess.file_exists(png_filepath):
+			prints("loading",png_filepath)
+			resource.texture = load(png_filepath)
+			prints("done")
 		ResourceSaver.save( resource, save_path+".res" )
 		return OK
 	else:
