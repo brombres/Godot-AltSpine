@@ -1,0 +1,14 @@
+[remap]
+
+importer="Spine.atlas_importer"
+type="Resource"
+uid="uid://c84cjsj8s78ud"
+path="res://.godot/imported/Spine.atlas-e32f41bcebf16b9f0b7a0d6c78bb7dd3.res"
+
+[deps]
+
+source_file="res://Spine.atlas"
+dest_files=["res://.godot/imported/Spine.atlas-e32f41bcebf16b9f0b7a0d6c78bb7dd3.res"]
+
+[params]
+

@@ -1,1 +1,1 @@
-# Godot-AltSpine
+# Godot-Spine

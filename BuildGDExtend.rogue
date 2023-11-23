@@ -1,0 +1,1341 @@
+# To run this build file, install Rogue from github.com/brombres/Rogue then cd
+# to this folder and type "rogo" at the command line, or "rogo help" for a list
+# of supported commands.
+
+$requireRogue "2.25"
+
+uses Math/Best
+uses Utility/GitIgnorePatcher
+uses Utility/VersionNumber
+
+augment Build
+  # You can create a Local.rogo file with overrides for these values, e.g.:
+  #   AUTOLAUNCH = "path/to/project/folder"
+  PROPERTIES
+    AUTOLAUNCH        = ""  # Godot project path to auto-launch after a default 'rogo' build.
+    GODOT_EXE_MACOS   = ""
+    GODOT_EXE_WINDOWS = ""
+    GODOT_EXE_LINUX   = ""
+
+    GODOT_CPP_BRANCH = "4.1"
+
+		console_width : Int32
+endAugment
+
+routine rogo_default
+  # Builds the extension for the current platform's default architecture.
+  if (File("Source").exists)
+    if (File("Source").listing("*.cpp").count > 1)
+      build( "$.default.debug"(default_os) )
+    else
+      deps
+
+      build( default_os )
+
+      println
+
+      banner "Create native class"
+      print_wrap "Specify the first native class in the extension, e.g. 'GDTest' or 'GDTest extends Node' / 'GDTest:Node' etc."
+      local type_name = Console.input( "> " )
+      if (type_name) type_name .= trimmed
+      if (not String.exists(type_name))
+        println
+        println "[Cancelled]"
+        return
+      endIf
+
+      type_name .= replacing( ":", " extends " )
+      local parts = type_name.split(' ')
+      parts.modify( $.trimmed )
+      parts.discard( $ == "" )
+
+      if (parts.count == 1)
+        rogo_create( type_name, null, null )
+      elseIf (parts.count == 2)
+        rogo_create( parts[0], parts[1], null )
+      else
+        rogo_create( parts[0], parts[1], parts[2] )
+      endIf
+
+      build( default_os )
+    endIf
+  else
+    banner "Create GDExtension framework"
+    print_wrap...
+      "Enter extension name, e.g. 'gdtest'."
+      local name = Console.input( "> " )
+      if (name) name .= trimmed
+      if (not String.exists(name))
+        println
+        println "[Cancelled]"
+        return
+      endIf
+    rogo_init( name )
+  endIf
+
+  rogo_run
+endRoutine
+
+routine rogo_clean
+  # Deletes the 'Build' and '.rogo' folders.
+  forEach (folder in ["Build",".rogo"])
+    local file = File( folder )
+    if (file.exists)
+      println "[DELETE] $"(folder)
+      file.delete
+    endIf
+  endForEach
+endRoutine
+
+routine rogo_init( extension_name:String )
+  # Creates the framework for a new GDExtension with the specified name.
+  if (not extension_name.count) rogo_help; return
+
+  CreateExtension( extension_name )
+endRoutine
+
+# 'rogo help build' custom per-OS description
+block
+  local desc = ...
+    @|Builds the GDExtension.
+     |
+     |TARGETS ($OS-specific)
+     |  platforms:     [$PLATFORMS]
+     |  architectures: [$ARCHITECTURES]
+     |  modes:         [debug|release]
+     |
+     |DESCRIPTION
+     |  Any combination of target options can be given, in any order. By example:
+     |
+
+   localize default_os
+  desc += table(
+    [
+      ["rogo build","Builds the extension for the current OS and architecture, debug."],
+      ["rogo build release","Builds the extension for the current OS and architecture, release."],
+      ["rogo build debug release","Builds the extension for the current OS and architecture, debug and release."],
+      ["rogo build $"(default_os),"Builds extensions for $, all architectures, debug and release."(default_os)],
+      ["rogo build android web","Builds extensions for Android and Web, all architectures, debug and release."],
+      ["rogo build android arm64 debug","Builds extension for Android, arm64 architecture, debug."],
+      ["rogo build all","Builds extensions for all supported OS's, all architectures, debug and release."]
+    ],
+    Console.width.or_smaller(100) - 2
+  ).indented( 2 )
+  desc .= replacing( "$OS", System.os )
+  desc .= replacing( "$PLATFORMS", ["all"].[add(supported_platforms)].join('|') )
+  local architectures = Set<<String>>()
+  forEach (platform in supported_platforms)
+    architectures.add( forEach in supported_architectures(platform) )
+  endForEach
+  desc .= replacing( "$ARCHITECTURES", architectures.to_list.join('|') )
+
+  description( "build", desc )
+endBlock
+
+routine rogo_build
+  # SYNTAX: rogo build [targets]
+	local args = System.command_line_arguments.cloned.[remove_first]
+
+	local skip_sync = args.contains( "skip_sync" )
+	args.remove( "skip_sync" )
+
+	if local w_arg = args.find( $.begins_with("w=") )
+		Build.console_width = w_arg.after_last('=')->Int32
+		args.remove( w_arg )
+	endIf
+
+	build( args.join('.'), &=skip_sync )
+endRoutine
+
+routine rogo_find( class_name:String )
+  # Prints the filepath for the file that defines the given Godot class.
+  #
+  # EXAMPLES<br>
+  #   > rogo find Camera3D<br>
+  #   Libraries/godot-cpp/gen/include/godot_cpp/classes/camera3d.hpp
+  #
+  #   > rogo find Variant<br>
+  #   Libraries/godot-cpp/include/godot_cpp/variant/variant.hpp
+  println find_header( class_name, &expanded_search )
+endRoutine
+
+routine rogo_include( class_name:String )
+  # Prints the necessary #include path for the given Godot class.
+  # If the class can't be found in the standard #include path,
+  # all godot-cpp headers will be searched and the filename of
+  # the header that defines the class will be printed (equivalent
+  # to 'rogo find <ClassName>').
+  #
+  # EXAMPLES<br>
+  #   > rogo include Camera3D<br>
+  #   #include <godot_cpp/classes/camera3d.hpp>
+  #
+  #   > rogo include Variant<br>
+  #   Libraries/godot-cpp/include/godot_cpp/variant/variant.hpp
+  println find_header( class_name, &as_header, &expanded_search )
+endRoutine
+
+routine find_header( class_name:String, &as_header, &expanded_search )->String
+  if (class_name == "RefCounted")
+    if (as_header) return "#include <godot_cpp/classes/ref.hpp>"
+    else           return "Libraries/godot-cpp/include/godot_cpp/classes/ref.hpp"
+  else
+    local base_lc = class_name.to_lowercase
+    forEach (filepath in Files("Libraries/godot-cpp/gen/include","godot_cpp/classes/**/*.hpp"))
+      if (base_lc == File(filepath).filename.to_lowercase.replacing("_","").before_last(".hpp"))
+        if (as_header) return "#include <$>"(filepath.after_first("Libraries/godot-cpp/gen/include/"))
+        else           return filepath
+      endIf
+    endForEach
+
+    forEach (filepath in Files("Source","*.h"))
+      if (base_lc == File(filepath).filename.to_lowercase.replacing("_","").before_last(".h"))
+        if (as_header) return ''#include "$"''(filepath.after_first("Source/"))
+        else           return filepath
+      endIf
+    endForEach
+
+    if (expanded_search)
+      forEach (filepath in Files("Libraries/godot-cpp/**/*.hpp"))
+        if (base_lc == File(filepath).filename.to_lowercase.replacing("_","").before_last(".hpp"))
+          return filepath
+        endIf
+      endForEach
+
+      local search_for = "class $"(class_name)
+      local exclude = search_for + ";"
+      forEach (filepath in Files("Libraries/godot-cpp/**/*.hpp"))
+        forEach (line in LineReader(File(filepath)))
+          if (line.contains(search_for) and not line.contains(exclude))
+            return filepath
+          endIf
+        endForEach
+      endForEach
+    endIf
+
+    if (as_header)
+      banner "Cannot find the header for class '$'. "(class_name) +
+             "Manually add the appropriate #include."
+    else
+      banner "Cannot find the file that defines class '$'. "(class_name)
+    endIf
+
+    return ""
+  endIf
+endRoutine
+
+routine build( target:String, &skip_sync )
+  local config = BuildConfig( target )
+
+  if (not File("Source").exists)
+    throw Error( "Extension must first be created with 'rogo init <extension_name>'." )
+  endIf
+
+  deps
+
+  local listing = File( "Source" ).listing( "*.gdextension" )
+  local extension_name = which{ listing.count:listing.first || "" }
+
+  local android_ndk_root = System.env//ANDROID_NDK_ROOT
+  if (config.platforms.contains("android"))
+    if (not android_ndk_root)
+      local sdk = System.env//ANDROID_HOME
+      if (sdk)
+        local ndk = File(sdk) / "ndk"
+        if (ndk.exists)
+          local best = Best<<VersionNumber>>( $1 > $2 )
+          best.consider( File(forEach in ndk.listing).filename )
+          if (best.exists) android_ndk_root = ndk / best.value
+        endIf
+      endIf
+    endIf
+  endIf
+
+  forEach (platform in config.platforms)
+    if (platform == "web")
+      patch_js_build
+      if (not System.find_executable("em++"))
+        throw Error( "[Web] Cannot locate 'em++' compiler. Ensure 'emscripten' is installed." )
+      endIf
+    elseIf (platform == "android")
+      if (not android_ndk_root)
+        throw Error( "[NDK] Unable to locate Android NDK. Set ANDROID_NDK_ROOT and retry." )
+      endIf
+    endIf
+
+    local scons_platform = which{ platform=="web":"javascript" || platform }
+
+    local architectures = config.architectures.cloned
+    if (architectures.contains("all"))
+      architectures.[ clear, add(all_architectures(platform)) ]
+    endIf
+    forEach (arch in architectures)
+      forEach (mode in config.modes)
+        banner "Building GDExtension $ [$ $ $]"(extension_name,platform,arch,mode)
+        local cmd = "scons platform=$ target=template_$"(scons_platform,mode)
+        if (arch != "default") cmd .= appending( "arch=$"(arch) )
+        if (platform == "android") cmd .= appending( "ANDROID_NDK_ROOT=$"(android_ndk_root) )
+        execute cmd
+      endForEach
+    endForEach
+
+  endForEach
+
+  # Copy .gdextension to Build/
+  block files = Files( "Source", "*.gdextension" )
+    files.sync_to( File("Build"), &verbose, &keep_unused )
+  endBlock
+
+  if (not skip_sync) sync_products
+endRoutine
+
+routine patch_js_build
+  # Based on https://github.com/godotengine/godot-cpp/issues/1081
+  local file = File( "Libraries/godot-cpp/tools/javascript.py" )
+  if (not file.exists) return
+
+  local content = String( file )
+  if (content.contains(''#return "EM_CONFIG"'')) return
+
+  banner "Patching $ to fix Javascript build"(file)
+  local lines = content.split( '\n' )
+  local tab = ""
+  local rewriter = lines.rewriter
+  forEach (line in rewriter)
+    if (line.contains(''return "EM_CONFIG"''))
+      rewriter.write( line.replacing("return","#return") )
+      rewriter.write( line.before_first('r') + "return True" )
+    elseIf (line.contains(''if "EM_CONFIG" in os.environ:''))
+      tab = line.before_first( "if" )
+      rewriter.write( line.replacing("if","#if") )
+    elseIf (line.contains(''env["ENV"]''))
+      rewriter.write( tab + line.from_first("env") )
+      escapeForEach
+    else
+      rewriter.write( line )
+    endIf
+  endForEach
+  rewriter.write( forEach in rewriter )
+  file.save( lines.join('\n') )
+endRoutine
+
+routine supported_platforms->String[]
+  if (System.is_macos)
+    return ["android","ios","macos","web"]
+  elseIf (System.is_windows)
+    return ["android","web","windows"]
+  else
+    # Assume Linux
+    return ["android","linux","web"]
+  endIf
+endRoutine
+
+routine supported_architectures( platform:String )->String[]
+  which (platform)
+    case "android"
+      return ["default","x86_64","arm64"]
+    case "ios"
+      return ["default","universal","x86_64","arm64"]
+    case "linux"
+      return ["default","x86_64","arm64","rv64"]
+    case "macos"
+      return ["default","universal","x86_64","arm64"]
+    case "web"
+      return ["default","wasm32"]
+    case "windows"
+      return ["default","x86_32","x86_64"]
+    others
+      throw Error( "[ERROR] Unsupported platform '$'."(platform) )
+  endWhich
+  return null
+endRoutine
+
+routine all_architectures( platform:String )->String[]
+  which (platform)
+    case "android"
+      return ["x86_64","arm64"]
+    case "ios"
+      return ["universal"]
+    case "linux"
+      return ["x86_64","arm64","rv64"]
+    case "macos"
+      return ["universal"]
+    case "web"
+      return ["wasm32"]
+    case "windows"
+      return ["x86_32","x86_64"]
+    others
+      throw Error( "[ERROR] Unsupported platform '$'."(platform) )
+  endWhich
+  return null
+endRoutine
+
+routine default_os->String
+  return System.os.to_lowercase
+endRoutine
+
+routine table( contents:String[][], total_w:Int32 )->String
+  local w0 = 0
+  w0 .= or_larger( (forEach in contents)[0].count )
+  local w1 = 0
+  w1 .= or_larger( (forEach in contents)[1].count )
+
+  if (w0 + w1 + 3 > total_w)
+    w0 .= or_smaller( (total_w-3)/2 )
+    w1 = (total_w - 3 - w0)
+  endIf
+
+  local builder = String()
+  builder.print "┌"
+  loop (w0) builder.print "─"
+  builder.print "┬"
+  loop (w1) builder.print "─"
+  builder.println "┐"
+  forEach (row at j in contents)
+    if (j > 0)
+      builder.print "├"
+      loop (w0) builder.print "─"
+      builder.print "┼"
+      loop (w1) builder.print "─"
+      builder.println "┤"
+    endIf
+    local col0 = row[0].word_wrap( w0 ).iterator
+    local col1 = row[1].word_wrap( w1 ).iterator
+    while (col0.has_another or col1.has_another)
+      builder.print   "│"
+      builder.print   which{col0.has_another:col0.read||""}.justified(-w0)
+      builder.print   "│"
+      builder.print   which{col1.has_another:col1.read||""}.justified(-w1)
+      builder.println "│"
+    endWhile
+  endForEach
+  builder.print "└"
+  loop (w0) builder.print "─"
+  builder.print "┴"
+  loop (w1) builder.print "─"
+  builder.print "┘"
+  return builder
+endRoutine
+
+routine rogo_sync( project_filepath:String )
+  # Syncs the specified project to be automatically kept up-to-date with this GDExtension's build products.
+  # Multiple projects can be synced. Run 'rogo unsync <project_filepath>' to stop updating a project with new build products.
+  if (not String.exists(project_filepath))
+    sync_products
+    return
+  endIf
+
+  project_filepath = File( project_filepath ).abs
+  if (project_filepath.ends_with("/project.godot"))
+    project_filepath = File(project_filepath).folder
+  endIf
+
+  local synched_projects = String[]
+  local file =  File("SynchedProjects.rogo")
+  if (file.exists) synched_projects = String( file ).trimmed.split( '\n' )
+  if (not synched_projects.contains(project_filepath))
+    if (File(project_filepath).exists and File(project_filepath/"project.godot").exists)
+      synched_projects.add( project_filepath )
+    elseIf (File(project_filepath).exists)
+      error.println "[ERROR] $ does not contain a project.godot file - skipping."(project_filepath)
+      return
+    else
+      error.println "[ERROR] Filepath '$' does not exist - skipping."(project_filepath)
+      return
+    endIf
+  endIf
+  banner "Now synching build products to " + project_filepath
+  file.save( synched_projects.join('\n') + "\n" )
+
+  sync_products
+endRoutine
+
+routine rogo_unsync( project_filepath:String )
+  # Stops updating the specified Godot project with updated builds of this extension.
+  project_filepath = File( project_filepath ).abs
+
+  local synched_projects = String[]
+  local file =  File("SynchedProjects.rogo")
+  if (file.exists) synched_projects = String( file ).trimmed.split( '\n' )
+  synched_projects.remove( project_filepath )
+  banner "Build products are no longer synched to " + project_filepath
+  file.save( synched_projects.join('\n') )
+endRoutine
+
+routine rogo_create( class_name:String, extends:String, base_class_name:String )
+  # SYNTAX: rogo create <ClassName> [extends <BaseClassName>]
+  # Generates framework code for a native class with the specified name.
+  # If no 'extends <BaseClassName>' is specified, the new class will extend 'RefCounted'.
+  # Extending 'Node' (or 'Node2D' etc.) will create a node class that can be added to the
+  # scene tree. Can be repeated to create multiple native classes as part of this GDExtension.
+  if (class_name.contains(':'))
+    base_class_name = class_name.after_first( ':' )
+    extends = ":"
+    class_name .= before_first(':')
+  endIf
+
+  if (String.exists(extends))
+    contingent
+      necessary (extends == "extends" or extends == ":")
+      necessary (String.exists(base_class_name))
+    unsatisfied
+      throw Error( "[ERROR] Syntax error - expected 'rogo create $', 'rogo create $ extends <BaseClassName>', "...
+                   "or 'rogo create $:<BaseClassName>'."(class_name,class_name,class_name) )
+    endContingent
+  else
+    base_class_name = "RefCounted"
+  endIf
+  CreateClass( class_name, base_class_name )
+endRoutine
+
+routine sync_products
+  # Copy build products to synched output projects.
+  local needs_header = true
+  local message = "Synchronizing build products to linked projects"
+
+  local synched_projects = String[]
+  local file =  File("SynchedProjects.rogo")
+  if (file.exists) synched_projects = String( file ).trimmed.split( '\n' )
+
+  forEach (project_filepath in synched_projects)
+    if (rogo_copy_products( project_filepath, &=needs_header ))
+      needs_header = false
+    endIf
+  endForEach
+
+  if (needs_header)
+    banner "All synchronized projects are up to date."
+  endIf
+endRoutine
+
+routine rogo_copy_products( project_filepath:String, &needs_header, w=Console.width:Int32 )->Logical
+  # Copy build products to a specific project folder.
+  local message = "Synchronizing build products to linked projects"
+  local synched_any = false
+
+  local project_folder = File( project_filepath )
+  if (not project_folder.exists) return false
+
+  local bin = project_folder/"bin"
+  bin.create_folder
+  local products = Files( "Build" )
+  products.add( "*.gdextension" )
+  products.add( "*.dll" )
+  products.add( "*.dylib" )
+  products.add( "*.framework/**" )
+  products.add( "*.so" )
+  products.add( "*.wasm" )
+  if (products.sync_to(bin,&dry_run,&keep_unused))
+    if (needs_header)
+      banner( message, w )
+      needs_header = false
+      synched_any = true
+    endIf
+    products.sync_to( bin, &verbose, &keep_unused )
+  endIf
+
+  return synched_any
+endRoutine
+
+routine rogo_run
+  # Runs the AUTOLAUNCH project, if defined.
+  if (String.exists(Build.AUTOLAUNCH))
+    if (System.is_macos)
+      local exe = Build.GODOT_EXE_MACOS
+      if (String.exists(exe) and not exe.ends_with(".app"))
+        local cmd = "$ $/project.godot"(File(Build.GODOT_EXE_MACOS).esc,File(Build.AUTOLAUNCH).esc)
+        execute cmd
+      else
+        local cmd = "open"
+        if (String.exists(exe)) cmd .= appending( "-a $"(File(exe).esc) )
+        cmd .= appending( "$/project.godot"(File(Build.AUTOLAUNCH).esc) )
+        execute cmd
+      endIf
+    elseIf (System.is_windows)
+      if (String.exists(Build.GODOT_EXE_WINDOWS))
+        local cmd = "$ $/project.godot"(File(Build.GODOT_EXE_WINDOWS).esc,File(Build.AUTOLAUNCH).esc)
+        execute cmd
+      endIf
+    else
+      if (String.exists(Build.GODOT_EXE_LINUX))
+        local cmd = "$ $/project.godot"(File(Build.GODOT_EXE_LINUX).esc,File(Build.AUTOLAUNCH).esc)
+        execute cmd
+      endIf
+    endIf
+  endIf
+endRoutine
+
+routine rogo_deps
+  # Installs or updates the 'godot-cpp' dependency repo.
+  deps( &check_for_update )
+endRoutine
+
+routine deps( &check_for_update )
+  if (not File("Libraries").exists)
+    println "> Create Libraries/"
+    File("Libraries").create_folder
+  endIf
+
+  if (not File("Libraries/godot-cpp").exists)
+    banner "Cloning godot-cpp repo"
+    execute "git clone -b $ https://github.com/godotengine/godot-cpp.git Libraries/godot-cpp"(Build.GODOT_CPP_BRANCH)
+  elseIf (check_for_update)
+    banner "Updating godot-cpp repo"
+    execute "(cd Libraries/godot-cpp && git pull)"
+    execute "(cd Libraries/godot-cpp && scons)"
+  endIf
+
+  local patcher = GitIgnorePatcher( ".gitignore" )
+
+  patch_gitignore( patcher )
+
+  if (patcher.is_modified)
+    if (patcher.file.exists) banner "Updating .gitignore"
+    else                     banner "Creating .gitignore"
+    patcher.print_new_entries
+    patcher.save
+  endIf
+endRoutine
+
+routine patch_gitignore( patcher:GitIgnorePatcher )
+  patcher.add( "# GDExtension", "/Libraries" )
+  patcher.add( "# GDExtension", "*.os" )
+
+  patcher.add( "# Rogo", ".rogo" )
+  patcher.add( "# Rogo", "/Build" )
+  patcher.add( "# Rogo", "BuildLocal.rogue" )
+  patcher.add( "# Rogo", "/SynchedProjects.rogo" )
+  patcher.add( "# Rogo", "Local.rogo" )
+
+  patcher.add( "# SCons", ".sconsign.dblite" )
+
+  patcher.add( "# Vim", "*.swo" )
+  patcher.add( "# Vim", "*.swp" )
+endRoutine
+
+routine execute( commands:String, error_message=null:String, &suppress_error )->Logical
+  forEach (cmd in LineReader(commands))
+    print( "> " )
+    println( cmd )
+    if (0 != System.run(cmd))
+      if (suppress_error)
+        return false
+      else
+        if (not error_message) error_message = "Build failed."
+        throw Error( error_message )
+      endIf
+    endIf
+  endForEach
+  return true
+endRoutine
+
+class BuildConfig
+  GLOBAL PROPERTIES
+    PLATFORMS        = ["all","android","ios","javascript","js","linux","macos","uwp","web","windows"]
+    ARCHITECTURES    = ["default","x86_32","x86_64","arm32","arm64","rv64","ppc32","ppc64","wasm32","universal"]
+    MODES            = ["debug","release","dist","distributable"]
+    ALIASES = { "javascript":"web", "js":"web" } : [String:String]
+    PLATFORM_NAMES = { "android":"Android", "ios":"iOS", "linux":"Linux", "macos":"macOS",
+                       "uwp":"UWP", "web":"Web", "windows":"Windows" } : [String:String]
+
+  PROPERTIES
+    platforms = String[]
+    architectures = String[]
+    modes = String[]
+
+  METHODS
+    method init( target_string:String )
+      localize supported_platforms
+
+      if (String.exists(target_string))
+        local targets = target_string.split('.')
+        forEach (target in targets)
+          which (target)
+            case "all"
+              platforms.add( supported_platforms )
+              nextIteration
+          endWhich
+
+          if (ALIASES.contains(target)) target = ALIASES[ target ]
+
+          if (PLATFORMS.contains(target))
+            if (not supported_platforms.contains(target))
+              throw Error( "Invalid platform target '$'. Valid platforms on $ are [$]."...
+                           (target,System.os,supported_platforms.join("|")) )
+            endIf
+            if (not platforms.contains(target)) platforms.add( target )
+          elseIf (ARCHITECTURES.contains(target))
+            if (not architectures.contains(target)) architectures.add( target )
+          elseIf (MODES.contains(target))
+            if (not modes.contains(target)) modes.add( target )
+          else
+            throw Error( "[ERROR] Invalid target: '$'."(target) )
+          endIf
+        endForEach
+      endIf
+
+      if (platforms.is_empty)
+        platforms.add( default_os )
+        if (architectures.is_empty) architectures.add( "default" )
+        if (modes.is_empty) modes.add( "debug" )
+      else
+        if (architectures.is_empty) architectures.add( "all" )
+        if (modes.is_empty) modes.[ add("debug"), add("release") ]
+      endIf
+
+      if (architectures.count)
+        forEach (arch in architectures)
+          if (arch == "all" or arch == "default") nextIteration
+          forEach (p in platforms)
+            if (not supported_architectures(p).contains(arch))
+              throw Error( "[ERROR] Platform '$' does not support architecture '$'."(p,arch) )
+            endIf
+          endForEach
+        endForEach
+      endIf
+
+endClass
+
+class CreateExtension
+  PROPERTIES
+    libname : String
+
+  METHODS
+    method init( libname )
+      if (File("Source").exists) throw Error( "GDExtension source code already exists. Run 'rogo' to build." )
+
+      File( "Build" ).create_folder
+      File( "Source" ).create_folder
+
+      local register_types_cpp =
+        @|#include <gdextension_interface.h>
+         |#include <godot_cpp/core/class_db.hpp>
+         |#include <godot_cpp/core/defs.hpp>
+         |#include <godot_cpp/godot.hpp>
+         |#include <godot_cpp/variant/utility_functions.hpp>
+         |
+         |using namespace godot;
+         |
+         |void initialize_<LIBNAME>_types(ModuleInitializationLevel p_level)
+         |{
+         |  // --- Initialization levels ---
+         |  // MODULE_INITIALIZATION_LEVEL_CORE
+         |  // MODULE_INITIALIZATION_LEVEL_SERVERS
+         |  // MODULE_INITIALIZATION_LEVEL_SCENE
+         |  // MODULE_INITIALIZATION_LEVEL_EDITOR
+         |  godot::UtilityFunctions::print( "[<LIBNAME>] Initializing (", p_level, ")" );
+         |
+         |  if (p_level != MODULE_INITIALIZATION_LEVEL_SCENE)
+         |  {
+         |    return;
+         |  }
+         |
+         |  // ClassDB::register_class<ClassName>();
+         |}
+         |
+         |void uninitialize_<LIBNAME>_types(ModuleInitializationLevel p_level)
+         |{
+         |  if (p_level != MODULE_INITIALIZATION_LEVEL_SCENE)
+         |  {
+         |    return;
+         |  }
+         |}
+         |
+         |extern "C"
+         |{
+         |  GDExtensionBool GDE_EXPORT <LIBNAME>_library_init(
+         |    GDExtensionInterfaceGetProcAddress p_get_proc_address,
+         |    const GDExtensionClassLibraryPtr p_library,
+         |    GDExtensionInitialization *r_initialization )
+         |  {
+         |    GDExtensionBinding::InitObject init_obj(p_get_proc_address, p_library, r_initialization);
+         |
+         |    init_obj.register_initializer(initialize_<LIBNAME>_types);
+         |    init_obj.register_terminator(uninitialize_<LIBNAME>_types);
+         |    init_obj.set_minimum_library_initialization_level(MODULE_INITIALIZATION_LEVEL_SCENE);
+         |
+         |    return init_obj.init();
+         |  }
+         |}
+      save( register_types_cpp, File("Source/register_types.cpp") )
+
+      local sconstruct =
+        @|#!/usr/bin/env python
+         |import os
+         |import sys
+         |
+         |env = SConscript("Libraries/godot-cpp/SConstruct")
+         |
+         |# For the reference:
+         |# - CCFLAGS are compilation flags shared between C and C++
+         |# - CFLAGS are for C-specific compilation flags
+         |# - CXXFLAGS are for C++-specific compilation flags
+         |# - CPPFLAGS are for pre-processor flags
+         |# - CPPDEFINES are for pre-processor defines
+         |# - LINKFLAGS are for linking flags
+         |
+         |def add_sources(sources, dir, extension):
+         |  for f in os.listdir(dir):
+         |    if f.endswith("." + extension):
+         |      sources.append(dir + "/" + f)
+         |
+         |env.Append(CPPPATH=["Source/"])
+         |sources = Glob("Source/*.cpp")
+         |
+         |if env["platform"] == "macos":
+         |  add_sources(sources, "Source", "m")
+         |  add_sources(sources, "Source", "mm")
+         |
+         |  # Example - uncomment and adjust as desired
+         |  #env.Append(
+         |  #    LINKFLAGS=[
+         |  #        "-framework",
+         |  #        "Foundation"
+         |  #    ]
+         |  #)
+         |
+         |  library = env.SharedLibrary(
+         |    "Build/lib<LIBNAME>.{}.{}.framework/lib<LIBNAME>.{}.{}".format(
+         |      env["platform"], env["target"], env["platform"], env["target"]
+         |    ),
+         |    source=sources,
+         |  )
+         |
+         |else:
+         |  if env["platform"] == "ios":
+         |    add_sources(sources, "Source", "m")
+         |    add_sources(sources, "Source", "mm")
+         |
+         |    # Example - uncomment and adjust as desired
+         |    #env.Append(
+         |    #    LINKFLAGS=[
+         |    #        "-framework",
+         |    #        "Foundation"
+         |    #    ]
+         |    #)
+         |
+         |  library = env.SharedLibrary(
+         |    "Build/lib<LIBNAME>{}{}".format(env["suffix"], env["SHLIBSUFFIX"]),
+         |    source=sources,
+         |  )
+         |
+         |Default(library)
+      save( sconstruct, File("SConstruct") )
+
+      local extension =
+        @|[configuration]
+         |
+         |entry_symbol = "<LIBNAME>_library_init"
+         |compatibility_minimum = 4.1
+         |
+         |[libraries]
+         |
+         |android.arm64.debug       = "res://bin/lib<LIBNAME>.android.template_debug.arm64.so"
+         |android.arm64.release     = "res://bin/lib<LIBNAME>.android.template_release.arm64.so"
+         |android.x86_64.debug      = "res://bin/lib<LIBNAME>.android.template_debug.x86_64.so"
+         |android.x86_64.release    = "res://bin/lib<LIBNAME>.android.template_release.x86_64.so"
+         |ios.debug                 = "res://bin/lib<LIBNAME>.ios.template_debug.universal.dylib"
+         |ios.release               = "res://bin/lib<LIBNAME>.ios.template_release.universal.dylib"
+         |javascript.wasm32.debug   = "lib<LIBNAME>.javascript.template_debug.wasm32.wasm"
+         |javascript.wasm32.release = "lib<LIBNAME>.javascript.template_release.wasm32.wasm"
+         |linux.arm64.debug         = "res://bin/lib<LIBNAME>.linux.template_debug.arm64.so"
+         |linux.arm64.release       = "res://bin/lib<LIBNAME>.linux.template_release.arm64.so"
+         |linux.rv64.debug          = "res://bin/lib<LIBNAME>.linux.template_debug.rv64.so"
+         |linux.rv64.release        = "res://bin/lib<LIBNAME>.linux.template_release.rv64.so"
+         |linux.x86_32.debug        = "res://bin/lib<LIBNAME>.linux.template_debug.x86_32.so"
+         |linux.x86_32.release      = "res://bin/lib<LIBNAME>.linux.template_release.x86_32.so"
+         |linux.x86_64.debug        = "res://bin/lib<LIBNAME>.linux.template_debug.x86_64.so"
+         |linux.x86_64.release      = "res://bin/lib<LIBNAME>.linux.template_release.x86_64.so"
+         |macos.debug               = "res://bin/lib<LIBNAME>.macos.template_debug.framework"
+         |macos.release             = "res://bin/lib<LIBNAME>.macos.template_release.framework"
+         |windows.x86_32.debug      = "res://bin/lib<LIBNAME>.windows.template_debug.x86_32.dll"
+         |windows.x86_32.release    = "res://bin/lib<LIBNAME>.windows.template_release.x86_32.dll"
+         |windows.x86_64.debug      = "res://bin/lib<LIBNAME>.windows.template_debug.x86_64.dll"
+         |windows.x86_64.release    = "res://bin/lib<LIBNAME>.windows.template_release.x86_64.dll"
+      save( extension, File("Source/$.gdextension"(libname)) )
+
+      banner "Extension '$' created."(libname)
+      println
+
+      rogo_default
+
+      banner "Finished! Run 'rogo help' to list available build commands."
+
+    method save( source:String, file:File )
+      if (file.exists) return
+      println "  [CREATE] $"(file)
+      source .= replacing( "<LIBNAME>", libname )
+      file.save( source )
+endClass
+
+class CreateClass
+  PROPERTIES
+    name              : String
+    name_uc           : String
+    base_class_name   : String
+    base_class_header : String
+
+  METHODS
+    method init( name, base_class_name )
+      deps
+
+      name_uc = name.to_uppercase
+
+      banner "Creating native class $ extends $"(name,base_class_name)
+
+      base_class_header = find_header( base_class_name, &as_header)
+
+      local h =
+        @|// REFERENCE
+         |// https://docs.godotengine.org/en/stable/contributing/development/core_and_modules/object_class.html
+         |
+         |#ifndef <NAME_UC>_H
+         |#define <NAME_UC>_H
+         |
+         |#ifdef WIN32
+         |  #include <windows.h>
+         |#endif
+         |
+         |<BASE_CLASS_HEADER>
+         |#include <godot_cpp/classes/camera3d.hpp>
+         |#include <godot_cpp/classes/material.hpp>
+         |
+         |using namespace godot;
+         |
+         |class <NAME> : public <BASE_CLASS_NAME>
+         |{
+         |  GDCLASS( <NAME>, <BASE_CLASS_NAME> );
+         |
+         |  protected:
+         |    static void _bind_methods();
+         |
+         |  public:
+         |    // PROPERTIES
+         |    float         scale = 1.0f;
+         |    Vector3       position;
+         |    ObjectID      camera;
+         |    Ref<Material> material;
+         |
+         |    // CONSTRUCTOR METHODS
+         |    <NAME>();
+         |    ~<NAME>();
+         |
+         |    // PROPERTY ACCESS METHODS
+         |    Ref<Material> get_material() { return material; }
+         |    void          set_material( const Ref<Material> &p_material ) { material = p_material; }
+         |
+         |    Camera3D* get_camera();
+         |    void      set_camera( Camera3D* p_camera );
+         |
+         |    Vector3 get_position() { return position; }
+         |    void    set_position( Vector3 p_position ) { position = p_position; }
+         |
+         |    float get_scale() { return scale; }
+         |    void  set_scale( float p_scale ) { scale = p_scale; }
+         |
+         |    // GENERAL METHODS
+         |    int add_one( int parameter );
+         |};
+         |
+         |#endif // <NAME_UC>_H
+      save( h, File("Source/$.h"(name)) )
+
+      local cpp =
+        @|#include "<NAME>.h"
+         |#include <godot_cpp/core/class_db.hpp>
+         |
+         |using namespace godot;
+         |
+         |<NAME>::<NAME>()
+         |{
+         |}
+         |
+         |<NAME>::~<NAME>()
+         |{
+         |}
+         |
+         |Camera3D* <NAME>::get_camera()
+         |{
+         |  // Result can be 'nullptr'.
+         |  return Object::cast_to<Camera3D>( ObjectDB::get_instance(camera) );
+         |}
+         |
+         |void <NAME>::set_camera( Camera3D* p_camera )
+         |{
+         |  camera = p_camera ? p_camera->get_instance_id() : ObjectID();
+         |}
+         |
+         |int <NAME>::add_one( int parameter )
+         |{
+         |  return parameter + 1;
+         |}
+         |
+         |void <NAME>::_bind_methods()
+         |{
+         |  ClassDB::bind_method( D_METHOD("get_material" ),         &<NAME>::get_material );
+         |  ClassDB::bind_method( D_METHOD("get_camera" ),           &<NAME>::get_camera );
+         |  ClassDB::bind_method( D_METHOD("get_position" ),         &<NAME>::get_position );
+         |  ClassDB::bind_method( D_METHOD("get_scale" ),            &<NAME>::get_scale );
+         |  ClassDB::bind_method( D_METHOD("set_camera", "value"),   &<NAME>::set_camera );
+         |  ClassDB::bind_method( D_METHOD("set_material", "value"), &<NAME>::set_material );
+         |  ClassDB::bind_method( D_METHOD("set_position", "value"), &<NAME>::set_position );
+         |  ClassDB::bind_method( D_METHOD("set_scale", "value"),    &<NAME>::set_scale );
+         |  ClassDB::bind_method( D_METHOD("add_one", "parameter"),  &<NAME>::add_one, DEFVAL(1) );
+         |  ADD_PROPERTY( PropertyInfo(Variant::OBJECT,  "material", PROPERTY_HINT_RESOURCE_TYPE, "Material"), "set_material", "get_material");
+         |  ADD_PROPERTY( PropertyInfo(Variant::OBJECT,  "camera",   PROPERTY_HINT_NODE_TYPE, "Camera3D"), "set_camera", "get_camera");
+         |  ADD_PROPERTY( PropertyInfo(Variant::VECTOR3, "position"), "set_position", "get_position");
+         |  ADD_PROPERTY( PropertyInfo(Variant::FLOAT,   "scale",    PROPERTY_HINT_RANGE, "0.0,1.0,0.05,or_less,or_greater"), "set_scale", "get_scale");
+         |}
+      save( cpp, File("Source/$.cpp"(name)) )
+
+      patch_register_types_cpp
+
+    method patch_register_types_cpp
+      local file = File( "Source/register_types.cpp" )
+      local content = String( file )
+      local lines = content.split( '\n' )
+
+      local new_line = "ClassDB::register_class<$>();"(name)
+      if ((forEach in lines).contains(new_line)) return
+
+      println "  [PATCH]  Source/register_types.cpp"
+      local index = lines.locate_last( $.contains("::register_class") )
+      if (index)
+        index = index.value + 1
+      else
+        index = lines.locate( $.begins_with('}') )
+      endIf
+      lines.insert( "  $"(new_line), &before_index=index.value )
+
+      index = lines.locate_last( $.begins_with("#include") )
+      lines.insert( ''#include "$.h"''(name), &before_index=index.value+1 )
+
+      file.save( lines.join('\n') )
+
+    method save( source:String, file:File )
+      if (file.exists) return
+      println "  [CREATE] $"(file)
+      source .= replacing( "<NAME>", name )
+      source .= replacing( "<NAME_UC>", name_uc )
+      source .= replacing( "<BASE_CLASS_HEADER>", base_class_header )
+      source .= replacing( "<BASE_CLASS_NAME>", base_class_name )
+			source .= replacing( "  ", '\t' )
+      file.save( source )
+
+endClass
+
+routine banner( content:String, w=Console.width:Int32 )
+	w .= or_larger( Build.console_width )
+
+  local n = w.or_smaller(100)
+  content .= word_wrapped( n-2 )
+
+  println "┌$┐" ("─"*(n-2))
+  forEach (line in content.split('\n'))
+    println "│$$│"(line," "*(n-(line.count+2)))
+  endForEach
+  println "└$┘" ("─"*(n-2))
+endRoutine
+
+routine print_wrap( text:String )
+  println text.word_wrapped( 100.or_smaller(Console.width) )
+endRoutine
+
+#-------------------------------------------------------------------------------
+# Introspection-based Launcher Framework
+#-------------------------------------------------------------------------------
+# Rogo is a "build your own build system" facilitator. At its core Rogo just
+# recompiles build files if needed and then runs the build executable while
+# forwarding any command line arguments. This file contains a default framework
+# which uses introspection to turn command line arguments into parameterized
+# routine calls.
+
+# Example: to handle the command "rogo abc xyz 5", define
+# "routine rogo_abc_xyz( n:Int32 )".
+
+# "rogo_default" will run in the absence of any other command line argument.
+
+# The following "comment directives" can be used in this file to control how
+# RogueC compiles it and to manage automatic dependency installation and
+# linking.
+
+# Each of the following should be on a line beginning with the characters #$
+# (preceding whitespace is fine). Sample args are given.
+
+#   ROGUEC       = roguec       # Path to roguec to compile this file with
+#   ROGUEC_ARGS  = --whatever   # Additional options to pass to RogueC
+#   CC           = gcc -Wall -fno-strict-aliasing
+#   CC_ARGS      = -a -b -c          # Additional C args
+#   LINK         = -lalpha -lbeta    # Link this build file with these options
+#   LINK(macOS)  = ...               # Options applying only to
+#                                    # System.os=="macOS" (use with any OS and
+#                                    # any comment directive)
+#   LINK_LIBS    = true              # Links following LIBRARIES with this Build
+#                                    # file (otherwise just installs them)
+#   LINK_LIBS    = false             # Linking turned off for following
+#                                    # LIBRARIES - info can still be obtained
+#                                    # from $LIBRARY_FLAGS or $LIBRARIES(libname,...)
+#   LIBRARIES    = libalpha
+#   LIBRARIES    = libbeta(library-name)
+#   LIBRARIES    = libfreetype6-dev(freetype2)
+#   DEPENDENCIES = Library/Rogue/**/*.rogue
+#
+#   LIBRARIES    = name(package)
+#   LIBRARIES    = name(
+#                    exe:<which-name>
+#                    exists-cmd:<exists-cmd>
+#                    flags:<library-flags>
+#                    ignore-exe-only:<setting>
+#                    info:<info-name>
+#                    info-cmd:<get-info-cmd>
+#                    install:<install-name>
+#                    install-cmd:<install-cmd>
+#                    link:<setting>
+#                    package:<package-name>
+#                  )
+#
+# The following macro is replaced within this file (Build.rogue) - the libraries
+# should normally also be declared in #$ LIBRARIES:
+#
+#   $LIBRARY_FLAGS(lib1,lib2)                              # sample macro
+#     ->
+#   -Ipath/to/lib1/include -Lpath/to/lib1/library -I ...   # sample replacement
+
+routine syntax( command:String, text:String )
+  if (not Build.rogo_syntax.contains(command))
+    Build.rogo_syntax[ command ] = text
+  endIf
+endRoutine
+
+routine description( command:String, text:String )
+  if (not Build.rogo_descriptions.contains(command))
+    Build.rogo_descriptions[ command ] = text
+  endIf
+endRoutine
+
+routine help( command:String, description_text=null:String, syntax_text=null:String )
+  if (description_text) description( command, description_text )
+  if (syntax_text)      syntax( command, syntax_text )
+endRoutine
+
+try
+  Build.launch
+catch (err:Error)
+  Build.rogo_error = err
+  Build.on_error
+endTry
+
+class Build [singleton]
+  PROPERTIES
+    rogo_syntax         = [String:String]
+    rogo_descriptions   = [String:String]
+    rogo_prefix         = "rogo_"
+    rogo_command        = "default"
+    rogo_args           = @[]
+    rogo_error          : Error
+
+    LOCAL_SETTINGS_FILE = "Local.rogo"
+
+  METHODS
+    method launch
+      rogo_args.add( forEach in System.command_line_arguments )
+      read_defs
+      on_launch
+      parse_args
+      dispatch_command
+
+    method dispatch_command
+      local m = find_command( rogo_command )
+      if (not m) throw Error( "No such routine rogo_$()" (rogo_command) )
+
+      local args = @[]
+      forEach (arg in rogo_args)
+        which (arg)
+          case "true":  args.add( true )
+          case "false": args.add( false )
+          case "null":  args.add( null )
+          others:       args.add( arg )
+        endWhich
+      endForEach
+      m( args )
+
+    method find_command( name:String )->MethodInfo
+      return <<Routine>>.find_global_method( rogo_prefix + name )
+
+    method on_error
+      local w = Console.width.or_smaller( 80 )
+      Console.error.println "=" * w
+      Console.error.println rogo_error->String.word_wrapped(w)
+      Console.error.println "=" * w
+      on_exit
+      System.exit 1
+
+    method on_command_found
+      noAction
+
+    method on_command_not_found
+      local w = Console.width.or_smaller( 80 )
+      println "=" * w
+      println "ERROR: No such command '$'." (rogo_args.first)
+      println "=" * w
+      println
+      rogo_command = "help"
+      rogo_args.clear
+      on_command_found
+
+    method on_launch
+      noAction
+
+    method on_exit
+      noAction
+
+    method parse_args
+      block
+        if (rogo_args.count)
+          local parts = String[]
+          parts.add( forEach in rogo_args )
+          rogo_args.clear
+
+          while (parts.count)
+            local cmd = parts.join("_")
+            if (find_command(cmd))
+              rogo_command = cmd
+              on_command_found
+              escapeBlock
+            endIf
+            rogo_args.insert( parts.remove_last )
+          endWhile
+
+          on_command_not_found
+        endIf
+
+        # Use default command
+        on_command_found
+      endBlock
+
+    method read_defs
+      read_defs( LOCAL_SETTINGS_FILE )
+
+    method read_defs( defs_filepath:String )
+      # Attempt to read defs from Local.rogo
+      local overrides = String[]
+      if (File(defs_filepath).exists)
+        forEach (line in LineReader(File(defs_filepath)))
+          if (line.contains("="))
+            local name  = line.before_first('=').trimmed
+            local value = line.after_first('=').trimmed
+            if (value.begins_with('"') or value.begins_with('\''))
+              value = value.leftmost(-1).rightmost(-1)
+            endIf
+            local p = <<Build>>.find_property( name )
+            if (p)
+              overrides.add( "$ = $" (name,value) )
+              p.set_value( this, value )
+            endIf
+          endIf
+        endForEach
+      endIf
+
+    method _join( value:Value )->String
+      local args = String[]
+      args.add( forEach in value )
+      return args.join( "_" )
+endClass
+
+
+routine rogo_help( command="":String )
+  # SYNTAX: rogo help [command]
+  # Displays help for a specified command or else all build commands.
+  command = Build._join( Build.rogo_args )
+  if (command.count)
+    local syntax = get_syntax( command )
+    local success = false
+    if (syntax)
+      println "SYNTAX"
+      println "  " + syntax
+      println
+      success = true
+    endIf
+    local description = get_description( command )
+    if (description)
+      description .= replacing("<br>","\n")
+      local max_w = Console.width - 2
+      println "DESCRIPTION"
+      forEach (line in LineReader(description.word_wrapped(max_w)))
+        print( "  " )
+        println( line )
+      endForEach
+      println
+      success = true
+    endIf
+    if (success)
+      return
+    else
+      local w = Console.width.or_smaller( 80 )
+      println "=" * w
+      println "ERROR: No such command '$'." (command)
+      println "=" * w
+      println
+    endIf
+  endIf
+
+  println "USAGE"
+  local entries = CommandInfo[]
+  local max_len = 0
+  forEach (m in <<Routine>>.global_methods)
+    if (m.name.begins_with(Build.rogo_prefix))
+      local name = m.name.after_first( Build.rogo_prefix )
+      local entry = CommandInfo( name, get_syntax(name), get_description(name) )
+      max_len .= or_larger( entry.syntax.count )
+      entries.add entry
+    endIf
+  endForEach
+
+  entries.sort( $1.name < $2.name )
+  max_len += 2
+
+  local max_w = Console.width
+  forEach (entry in entries)
+    print "  " + entry.syntax
+    if (entry.@description)
+      local description = entry.@description.before_first( '\n' )
+      loop (max_len - entry.syntax.count) print ' '
+      contingent
+        sufficient (2 + max_len + description.count <= max_w)
+        if (description.contains(". "))
+          description = description.before_first( ". " ) + "."
+          sufficient (max_len + description.count <= max_w)
+        endIf
+        necessary (max_len + 10 <= max_w)
+        description = description.unright( (description.count - (max_w - max_len))+5 ) + "..."
+      satisfied
+        print description
+      endContingent
+    endIf
+    println
+  endForEach
+  println
+endRoutine
+
+routine get_syntax( m_name:String )->String
+  if (Build.rogo_syntax.contains(m_name))
+    return "rogo " + Build.rogo_syntax[ m_name ]
+  else
+    local m = <<Routine>>.find_global_method( Build.rogo_prefix + m_name )
+    if (not m) return null
+    local line = "rogo $" (m_name.replacing('_',' '))
+    line += " <$>" ((forEach in m.parameters).name)
+    return line
+  endIf
+endRoutine
+
+
+routine get_description( m_name:String )->String
+  if (Build.rogo_descriptions.contains(m_name))
+    return Build.rogo_descriptions[ m_name ]
+  else
+    return null
+  endIf
+endRoutine
+
+class CommandInfo( name:String, syntax:String, description:String );

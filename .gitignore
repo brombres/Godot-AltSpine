@@ -1,0 +1,22 @@
+# GDExtension
+/godot-cpp
+*.os
+/Libraries
+
+# Godot
+/DemoProject/bin
+.godot
+
+# Rogo
+.rogo
+/Build
+BuildLocal.rogue
+/SynchedProjects.rogo
+Local.rogo
+
+# SCons
+.sconsign.dblite
+
+# Vim
+*.swo
+*.swp

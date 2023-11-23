@@ -1,0 +1,20 @@
+[gd_scene load_steps=7 format=3 uid="uid://bkb8trkwnpabq"]
+
+[ext_resource type="Script" path="res://addons/Spine/SpineSprite.gd" id="1_vd4ut"]
+[ext_resource type="Texture2D" uid="uid://droyayv318bp0" path="res://Spine.png" id="2_5p64r"]
+[ext_resource type="Script" path="res://addons/Spine/SpineAtlas.gd" id="3_icvnr"]
+[ext_resource type="Script" path="res://addons/Spine/SpineSpriteDefinition.gd" id="4_c5qys"]
+
+[sub_resource type="Resource" id="Resource_1sweb"]
+script = ExtResource("3_icvnr")
+atlas_image = ExtResource("2_5p64r")
+
+[sub_resource type="Resource" id="Resource_6jhfv"]
+script = ExtResource("4_c5qys")
+atlas = SubResource("Resource_1sweb")
+
+[node name="Node2D" type="Node2D"]
+
+[node name="SpineSprite" type="Node2D" parent="."]
+script = ExtResource("1_vd4ut")
+definition = SubResource("Resource_6jhfv")
