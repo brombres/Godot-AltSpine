@@ -5,7 +5,7 @@ func _get_import_options( path:String, preset_index:int )->Array[Dictionary]:
 	return []
 
 func _get_import_order()->int:
-	return 0
+	return 1  # Let images be imported first
 
 func _get_importer_name()->String:
 	return "Spine.atlas_importer"
@@ -35,13 +35,32 @@ func _import( source_filepath:String, save_path:String, options:Dictionary, plat
 	if FileAccess.file_exists(source_filepath):
 		var resource = preload( "SpineAtlasResource.gd" ).new()
 		resource.bytes = FileAccess.get_file_as_bytes( source_filepath )
-		var png_filepath = source_filepath.get_basename() + ".png"
+
+		var basename = source_filepath.get_basename()
+		var png_filepath = basename + ".png"
 		if FileAccess.file_exists(png_filepath):
-			prints("loading",png_filepath)
-			resource.texture = load(png_filepath)
-			prints("done")
+			resource.textures.push_back( load(png_filepath) )
+			for i in range(2,100):
+				png_filepath = "%s_%d.png" % [basename,i]
+				if FileAccess.file_exists(png_filepath):
+					resource.textures.push_back( load(png_filepath) )
+				else:
+					break
+
+			# Optional normal maps
+			png_filepath = "n%s.png" % basename
+			if FileAccess.file_exists(png_filepath):
+				resource.normal_maps.push_back( load(png_filepath) )
+				for i in range(2,100):
+					png_filepath = "n%s_%d.png" % [basename,i]
+					if FileAccess.file_exists(png_filepath):
+						resource.normal_maps.push_back( load(png_filepath) )
+					else:
+						break
+
 		ResourceSaver.save( resource, save_path+".res" )
 		return OK
+
 	else:
 		return Error.ERR_FILE_NOT_FOUND
 

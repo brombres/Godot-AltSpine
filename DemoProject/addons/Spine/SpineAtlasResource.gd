@@ -3,4 +3,5 @@ class_name SpineAtlasResource
 extends Resource
 
 @export var bytes:PackedByteArray
-@export var texture:Texture2D
+@export var textures:Array[Texture2D]
+@export var normal_maps:Array[Texture2D]
