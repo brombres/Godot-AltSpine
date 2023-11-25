@@ -20,6 +20,8 @@ def add_sources(sources, dir, extension):
 env.Append(CPPPATH=["Source/"])
 sources = Glob("Source/*.cpp")
 
+env.Append( CCFLAGS=[ "-I", "Libraries/spine-runtimes/spine-cpp/spine-cpp/include" ] )
+
 if env["platform"] == "macos":
   add_sources(sources, "Source", "m")
   add_sources(sources, "Source", "mm")

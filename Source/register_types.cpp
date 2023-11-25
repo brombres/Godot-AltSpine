@@ -14,7 +14,7 @@ void initialize_GDSpine_types(ModuleInitializationLevel p_level)
   // MODULE_INITIALIZATION_LEVEL_SERVERS
   // MODULE_INITIALIZATION_LEVEL_SCENE
   // MODULE_INITIALIZATION_LEVEL_EDITOR
-  godot::UtilityFunctions::print( "[GDSpine] Initializing (", p_level, ")" );
+  //godot::UtilityFunctions::print( "[GDSpine] Initializing (", p_level, ")" );
 
   if (p_level != MODULE_INITIALIZATION_LEVEL_SCENE)
   {

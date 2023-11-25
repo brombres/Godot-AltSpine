@@ -6,6 +6,7 @@ $requireRogue "2.25"
 
 uses Math/Best
 uses Utility/GitIgnorePatcher
+uses Utility/GitRepo
 uses Utility/VersionNumber
 
 augment Build
@@ -18,6 +19,7 @@ augment Build
     GODOT_EXE_LINUX   = ""
 
     GODOT_CPP_BRANCH = "4.1"
+    SPINE_BRANCH     = ""
 
 		console_width : Int32
 endAugment
@@ -576,15 +578,31 @@ routine deps( &check_for_update )
     File("Libraries").create_folder
   endIf
 
-  if (not File("Libraries/godot-cpp").exists)
-    banner "Cloning godot-cpp repo"
-    execute "git clone -b $ https://github.com/godotengine/godot-cpp.git Libraries/godot-cpp"(Build.GODOT_CPP_BRANCH)
-  elseIf (check_for_update)
-    banner "Updating godot-cpp repo"
-    execute "(cd Libraries/godot-cpp && git pull)"
-    execute "(cd Libraries/godot-cpp && scons)"
-  endIf
+  -------- Libraries/godot-cpp --------
+  block repo = GitRepo( "https://github.com/godotengine/godot-cpp.git", File("Libraries/godot-cpp") )
+    if (not repo.exists)
+      banner "Cloning godot-cpp repo"
+      repo.clone( Build.GODOT_CPP_BRANCH, &verbose )
+    elseIf (check_for_update and repo.has_remote_changes)
+      banner "Updating godot-cpp repo"
+      repo.pull( &verbose )
+      execute "(cd Libraries/godot-cpp && scons)"
+    endIf
+  endBlock
 
+  -------- Libraries/spine-runtimes --------
+  block repo = GitRepo( "https://github.com/EsotericSoftware/spine-runtimes.git", File("Libraries/spine-runtimes") )
+    if (not repo.exists)
+      banner "Cloning spine-runtimes repo"
+      repo.clone( Build.SPINE_BRANCH, &verbose )
+
+    elseIf (check_for_update and repo.has_remote_changes)
+      banner "Updating spine-runtimes repo"
+      repo.pull( &verbose )
+    endIf
+  endBlock
+
+  -------- .gitignore --------
   local patcher = GitIgnorePatcher( ".gitignore" )
 
   patch_gitignore( patcher )

@@ -11,6 +11,14 @@
 #include <godot_cpp/classes/ref.hpp>
 #include <godot_cpp/classes/camera3d.hpp>
 #include <godot_cpp/classes/material.hpp>
+#include <godot_cpp/classes/node.hpp>
+
+#include <godot_cpp/variant/variant.hpp>
+#include <godot_cpp/variant/utility_functions.hpp>
+
+#include <spine/spine.h>
+#include <spine/Extension.h>
+#include <spine/SkeletonJson.h>
 
 using namespace godot;
 
@@ -23,30 +31,33 @@ class SpineSpriteData : public RefCounted
 
 	public:
 		// PROPERTIES
-		float				 scale = 1.0f;
-		Vector3			 position;
-		ObjectID			camera;
-		Ref<Material> material;
+    Variant      spine_sprite;
+		//float				 scale = 1.0f;
+		//Vector3			 position;
+		//ObjectID			camera;
+		//Ref<Material> material;
 
 		// CONSTRUCTOR METHODS
 		SpineSpriteData();
 		~SpineSpriteData();
 
+    void configure( Node* spine_sprite );
+
 		// PROPERTY ACCESS METHODS
-		Ref<Material> get_material() { return material; }
-		void					set_material( const Ref<Material> &p_material ) { material = p_material; }
+		//Ref<Material> get_material() { return material; }
+		//void					set_material( const Ref<Material> &p_material ) { material = p_material; }
 
-		Camera3D* get_camera();
-		void			set_camera( Camera3D* p_camera );
+		//Camera3D* get_camera();
+		//void			set_camera( Camera3D* p_camera );
 
-		Vector3 get_position() { return position; }
-		void		set_position( Vector3 p_position ) { position = p_position; }
+		//Vector3 get_position() { return position; }
+		//void		set_position( Vector3 p_position ) { position = p_position; }
 
-		float get_scale() { return scale; }
-		void	set_scale( float p_scale ) { scale = p_scale; }
+		//float get_scale() { return scale; }
+		//void	set_scale( float p_scale ) { scale = p_scale; }
 
-		// GENERAL METHODS
-		int add_one( int parameter );
+		//// GENERAL METHODS
+		//int add_one( int parameter );
 };
 
 #endif // SPINESPRITEDATA_H

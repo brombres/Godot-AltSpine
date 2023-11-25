@@ -5,19 +5,23 @@ extends Node2D
 const SpineSpriteDefinition = preload("SpineSpriteDefinition.gd")
 @export var definition:SpineSpriteDefinition
 
+var data:SpineSpriteData
+
 
 # Called when the node enters the scene tree for the first time.
 func _ready():
-	_configure()
+	_configure_resources()
+	data = SpineSpriteData.new()
+	data.configure( self )
 
 func _enter_tree():
-	renamed.connect( _configure )
+	renamed.connect( _configure_resources )
 
 func _exit_tree():
-	if renamed.is_connected( _configure ):
-		renamed.disconnect( _configure )
+	if renamed.is_connected( _configure_resources ):
+		renamed.disconnect( _configure_resources )
 
-func _configure():
+func _configure_resources():
 	if definition or not Engine.is_editor_hint(): return
 
 	var viewport = get_viewport()
@@ -26,10 +30,10 @@ func _configure():
 	var child_count = viewport.get_child_count()
 	var scene = viewport.get_child( child_count - 1 )
 
-	if not _configure_resources( scene.scene_file_path.get_base_dir() ):  # Try scene folder first
-		_configure_resources( "res://" )  # Then root resource folder
+	if not _configure_resources_with_folder( scene.scene_file_path.get_base_dir() ):  # Try scene folder first
+		_configure_resources_with_folder( "res://" )  # Then root resource folder
 
-func _configure_resources( folder:String )->bool:
+func _configure_resources_with_folder( folder:String )->bool:
 	var def_name = name + ".tres"
 	var res = _find_resource( folder, func(filepath):return filepath.get_file()==def_name )
 	if res is SpineSpriteDefinition:
