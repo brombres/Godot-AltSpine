@@ -21,6 +21,7 @@ env.Append(CPPPATH=["Source/"])
 sources = Glob("Source/*.cpp")
 
 env.Append( CCFLAGS=[ "-I", "Libraries/spine-runtimes/spine-cpp/spine-cpp/include" ] )
+add_sources( sources, "Libraries/spine-runtimes/spine-cpp/spine-cpp/src/spine", "cpp")
 
 if env["platform"] == "macos":
   add_sources(sources, "Source", "m")

@@ -12,6 +12,8 @@
 #include <godot_cpp/variant/utility_functions.hpp>
 #include <godot_cpp/variant/variant.hpp>
 
+#include <spine/Atlas.h>
+
 using namespace godot;
 
 class SpineAtlasResourceData : public RefCounted
@@ -23,12 +25,17 @@ class SpineAtlasResourceData : public RefCounted
 
 	public:
 		// PROPERTIES
+    Variant spine_atlas_resource;
+    spine::Atlas* atlas = nullptr;
+    //SpineSpriteTextureLoader* texture_loader = nullptr;
 
 		// CONSTRUCTOR/DESTRUCTOR
 		SpineAtlasResourceData();
 		~SpineAtlasResourceData();
 
 		// METHODS
+    void configure( Variant spine_atlas_resource );
+    bool prepare_to_draw();
 
 };
 
