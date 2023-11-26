@@ -8,19 +8,17 @@
 	#include <windows.h>
 #endif
 
-#include <godot_cpp/classes/ref.hpp>
-#include <godot_cpp/classes/camera3d.hpp>
-#include <godot_cpp/classes/material.hpp>
 #include <godot_cpp/classes/node.hpp>
+#include <godot_cpp/classes/ref.hpp>
 
 #include <godot_cpp/variant/variant.hpp>
 #include <godot_cpp/variant/utility_functions.hpp>
 
 #include <spine/spine.h>
 #include <spine/Extension.h>
-#include <spine/SkeletonJson.h>
 
 using namespace godot;
+using namespace spine;
 
 class SpineSpriteData : public RefCounted
 {
@@ -41,8 +39,6 @@ class SpineSpriteData : public RefCounted
 		SpineSpriteData();
 		~SpineSpriteData();
 
-    void configure( Node* spine_sprite );
-
 		// PROPERTY ACCESS METHODS
 		//Ref<Material> get_material() { return material; }
 		//void					set_material( const Ref<Material> &p_material ) { material = p_material; }
@@ -56,7 +52,10 @@ class SpineSpriteData : public RefCounted
 		//float get_scale() { return scale; }
 		//void	set_scale( float p_scale ) { scale = p_scale; }
 
-		//// GENERAL METHODS
+		// GENERAL METHODS
+    void configure( Node* spine_sprite );
+    bool prepare_to_draw();
+
 		//int add_one( int parameter );
 };
 

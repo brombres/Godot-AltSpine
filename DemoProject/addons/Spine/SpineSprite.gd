@@ -6,9 +6,10 @@ const SpineSpriteDefinition = preload("SpineSpriteDefinition.gd")
 @export var definition:SpineSpriteDefinition
 
 var data:SpineSpriteData
+var mesh_builder:SurfaceTool = SurfaceTool.new()
+var mesh:ArrayMesh
 
 
-# Called when the node enters the scene tree for the first time.
 func _ready():
 	_configure_resources()
 	data = SpineSpriteData.new()
@@ -20,6 +21,30 @@ func _enter_tree():
 func _exit_tree():
 	if renamed.is_connected( _configure_resources ):
 		renamed.disconnect( _configure_resources )
+
+func _process( _dt:float ):
+	queue_redraw()
+
+func _draw():
+	if prepare_to_draw():
+		mesh_builder.clear()
+		mesh_builder.begin( Mesh.PRIMITIVE_TRIANGLES )
+
+		data.draw( mesh_builder, on_draw )
+
+func on_draw( _texture:Texture2D ):
+	# Draws the mesh in 'mesh_builder' using the specified 'texture'. Called during the _draw() phase.
+	if mesh:
+		mesh.clear_surfaces()
+		mesh_builder.commit( mesh )
+	else:
+		mesh = mesh_builder.commit()
+
+
+func prepare_to_draw()->bool:
+	if not definition or not definition.prepare_to_draw(): return false
+	if not data or not data.prepare_to_draw(): return false
+	return true
 
 func _configure_resources():
 	if definition or not Engine.is_editor_hint(): return

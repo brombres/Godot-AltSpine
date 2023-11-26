@@ -38,6 +38,10 @@ void SpineSpriteData::configure( Node* spine_sprite )
 //{
 //	return parameter + 1;
 //}
+bool SpineSpriteData::prepare_to_draw()
+{
+  return false;
+}
 
 void SpineSpriteData::_bind_methods()
 {

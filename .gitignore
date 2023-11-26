@@ -11,8 +11,8 @@
 .rogo
 /Build
 BuildLocal.rogue
-/SynchedProjects.rogo
 Local.rogo
+/SynchedProjects.rogo
 
 # SCons
 .sconsign.dblite
