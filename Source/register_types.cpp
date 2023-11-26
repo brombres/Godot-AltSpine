@@ -5,6 +5,7 @@
 #include <godot_cpp/variant/utility_functions.hpp>
 #include "SpineSpriteData.h"
 #include "SpineSpriteDefinitionData.h"
+#include "SpineAtlasResourceData.h"
 
 using namespace godot;
 
@@ -25,6 +26,7 @@ void initialize_GDSpine_types(ModuleInitializationLevel p_level)
   // ClassDB::register_class<ClassName>();
   ClassDB::register_class<SpineSpriteData>();
   ClassDB::register_class<SpineSpriteDefinitionData>();
+  ClassDB::register_class<SpineAtlasResourceData>();
 }
 
 void uninitialize_GDSpine_types(ModuleInitializationLevel p_level)

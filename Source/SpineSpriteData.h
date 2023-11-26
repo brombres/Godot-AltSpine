@@ -18,7 +18,6 @@
 #include <spine/Extension.h>
 
 using namespace godot;
-using namespace spine;
 
 class SpineSpriteData : public RefCounted
 {
@@ -29,7 +28,7 @@ class SpineSpriteData : public RefCounted
 
 	public:
 		// PROPERTIES
-    Variant      spine_sprite;
+    Node*     spine_sprite;
 		//float				 scale = 1.0f;
 		//Vector3			 position;
 		//ObjectID			camera;

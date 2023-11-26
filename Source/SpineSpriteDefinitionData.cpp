@@ -57,8 +57,6 @@ bool SpineSpriteDefinitionData::prepare_to_draw()
     }
   }
 
-  UtilityFunctions::print( "[SpineSpriteDefinitionData.prepare_to_draw()] skeleton byte count:", bytes.size() );
-
   return false;
 }
 

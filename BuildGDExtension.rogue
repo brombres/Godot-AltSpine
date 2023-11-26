@@ -931,11 +931,13 @@ class CreateClass
          |#endif
          |
          |<BASE_CLASS_HEADER>
+         |
       if (include_sample_code)
         h +=
           @|#include <godot_cpp/classes/camera3d.hpp>
            |#include <godot_cpp/classes/camera3d.hpp>
            |#include <godot_cpp/classes/material.hpp>
+           |
       endIf
       h +=
         @|#include <godot_cpp/variant/utility_functions.hpp>
@@ -952,18 +954,21 @@ class CreateClass
          |
          |  public:
          |    // PROPERTIES
+         |
       if (include_sample_code)
         h +=
           @|    float         scale = 1.0f;
            |    Vector3       position;
            |    ObjectID      camera;
            |    Ref<Material> material;
+           |
       endIf
       h +=
         @|
          |    // CONSTRUCTOR/DESTRUCTOR
          |    <NAME>();
          |    ~<NAME>();
+         |
          |
       if (include_sample_code)
         h +=
@@ -983,15 +988,18 @@ class CreateClass
            |    // GENERAL METHODS
            |    int add_one( int parameter );
            |    Variant get_property( Variant of_object, String property_name );
+           |
       else
         h +=
           @|    // METHODS
+           |
       endIf
       h +=
         @|
          |};
          |
          |#endif // <NAME_UC>_H
+         |
       save( h, File("Source/$.h"(name)) )
 
       local cpp =
@@ -1007,6 +1015,7 @@ class CreateClass
          |<NAME>::~<NAME>()
          |{
          |}
+         |
          |
       if (include_sample_code)
         cpp +=
@@ -1028,7 +1037,7 @@ class CreateClass
            |
            |Variant <NAME>::get_property( Variant of_object, String property_name )
            |{
-           |  GDObject* obj = (GDObject*)of_object;
+           |  Object* obj = (Object*)of_object;
            |  if (obj) return obj->get( property_name );
            |  else     return nullptr;
            |}
@@ -1050,11 +1059,13 @@ class CreateClass
            |  ADD_PROPERTY( PropertyInfo(Variant::VECTOR3, "position"), "set_position", "get_position");
            |  ADD_PROPERTY( PropertyInfo(Variant::FLOAT,   "scale",    PROPERTY_HINT_RANGE, "0.0,1.0,0.05,or_less,or_greater"), "set_scale", "get_scale");
            |}
+           |
       else
         cpp +=
           @|void <NAME>::_bind_methods()
            |{
            |}
+           |
       endIf
       save( cpp, File("Source/$.cpp"(name)) )
 
