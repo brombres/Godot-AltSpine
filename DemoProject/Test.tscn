@@ -5,7 +5,7 @@
 [ext_resource type="Script" path="res://addons/Spine/SpineSpriteDefinition.gd" id="3_jkcmo"]
 [ext_resource type="Resource" uid="uid://cou581wy34du5" path="res://Axor.skel" id="4_cua4c"]
 
-[sub_resource type="Resource" id="Resource_a3eyl"]
+[sub_resource type="Resource" id="Resource_0e8u6"]
 script = ExtResource("3_jkcmo")
 skeleton = ExtResource("4_cua4c")
 atlas = ExtResource("2_kkuel")
@@ -14,4 +14,4 @@ atlas = ExtResource("2_kkuel")
 
 [node name="Axor" type="Node2D" parent="."]
 script = ExtResource("1_1htx1")
-definition = SubResource("Resource_a3eyl")
+definition = SubResource("Resource_0e8u6")

@@ -10,12 +10,17 @@
 
 #include <godot_cpp/classes/node.hpp>
 #include <godot_cpp/classes/ref.hpp>
+#include <godot_cpp/classes/surface_tool.hpp>
 
 #include <godot_cpp/variant/variant.hpp>
 #include <godot_cpp/variant/utility_functions.hpp>
 
 #include <spine/spine.h>
+#include <spine/AnimationState.h>
+#include <spine/AnimationStateData.h>
 #include <spine/Extension.h>
+#include <spine/Skeleton.h>
+#include <spine/SkeletonData.h>
 
 using namespace godot;
 
@@ -28,34 +33,20 @@ class SpineSpriteData : public RefCounted
 
 	public:
 		// PROPERTIES
-    Node*     spine_sprite;
-		//float				 scale = 1.0f;
-		//Vector3			 position;
-		//ObjectID			camera;
-		//Ref<Material> material;
+    Node*                  spine_sprite;
+    spine::Skeleton*       skeleton = nullptr;
+    spine::AnimationState* animation_state = nullptr;
 
 		// CONSTRUCTOR METHODS
 		SpineSpriteData();
 		~SpineSpriteData();
 
-		// PROPERTY ACCESS METHODS
-		//Ref<Material> get_material() { return material; }
-		//void					set_material( const Ref<Material> &p_material ) { material = p_material; }
-
-		//Camera3D* get_camera();
-		//void			set_camera( Camera3D* p_camera );
-
-		//Vector3 get_position() { return position; }
-		//void		set_position( Vector3 p_position ) { position = p_position; }
-
-		//float get_scale() { return scale; }
-		//void	set_scale( float p_scale ) { scale = p_scale; }
-
 		// GENERAL METHODS
     void configure( Node* spine_sprite );
+    void draw( SurfaceTool* mesh_builder, Variant on_draw_callback );
     bool prepare_to_draw();
-
-		//int add_one( int parameter );
+    void reset();
+    void update( double dt );
 };
 
 #endif // SPINESPRITEDATA_H

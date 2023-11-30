@@ -32,9 +32,10 @@ class SpineAtlasResourceData : public RefCounted
 		// CONSTRUCTOR/DESTRUCTOR
 		SpineAtlasResourceData();
 		~SpineAtlasResourceData();
+    void reset();
 
 		// METHODS
-    void configure( Variant spine_atlas_resource );
+    bool configure( Variant spine_atlas_resource );
     bool prepare_to_draw();
 
 };

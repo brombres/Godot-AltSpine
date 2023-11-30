@@ -15,8 +15,10 @@
 #include <godot_cpp/variant/utility_functions.hpp>
 
 #include <spine/spine.h>
+#include <spine/AnimationState.h>
+#include <spine/AnimationStateData.h>
 #include <spine/Extension.h>
-#include <spine/SkeletonBinary.h>
+#include <spine/SkeletonData.h>
 
 using namespace godot;
 
@@ -31,6 +33,7 @@ class SpineSpriteDefinitionData : public RefCounted
 		// PROPERTIES
     Variant spine_sprite_definition;
     spine::SkeletonData* skeleton_data = nullptr;
+    spine::AnimationStateData* animation_state_data = nullptr;
 
 		// CONSTRUCTOR METHODS
 		SpineSpriteDefinitionData();
@@ -39,8 +42,10 @@ class SpineSpriteDefinitionData : public RefCounted
 		// PROPERTY ACCESS METHODS
 
 		// GENERAL METHODS
-    void configure( Variant spine_sprite_definition );
-    bool prepare_to_draw();
+    bool configure( Variant spine_sprite_definition, Variant gd_atlas );
+    bool prepare_to_draw( Variant gd_atlas );
+    void reset();
+    void update_mix_times();
 };
 
 #endif // SPINESPRITEDEFINITIONDATA_H

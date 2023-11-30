@@ -23,6 +23,7 @@ func _exit_tree():
 		renamed.disconnect( _configure_resources )
 
 func _process( _dt:float ):
+	if data: data.update( _dt )
 	queue_redraw()
 
 func _draw():
@@ -30,16 +31,30 @@ func _draw():
 		mesh_builder.clear()
 		mesh_builder.begin( Mesh.PRIMITIVE_TRIANGLES )
 
-		data.draw( mesh_builder, on_draw )
+		data.draw( mesh_builder, _handle_draw )
 
-func on_draw( _texture:Texture2D ):
-	# Draws the mesh in 'mesh_builder' using the specified 'texture'. Called during the _draw() phase.
+func _handle_draw( texture_index:int ):
+	var atlas = definition.atlas
+	if texture_index >= atlas.textures.size(): return
+
+	var texture = atlas.textures[texture_index]
+	var normal_map = atlas.normal_maps[texture_index] if texture_index < atlas.normal_maps.size() else null
+
 	if mesh:
 		mesh.clear_surfaces()
 		mesh_builder.commit( mesh )
 	else:
 		mesh = mesh_builder.commit()
 
+	_on_draw( mesh, texture, normal_map )
+
+	mesh_builder.clear()
+	mesh_builder.begin( Mesh.PRIMITIVE_TRIANGLES )
+
+func _on_draw( mesh:ArrayMesh, texture:Texture2D, normal_map ):
+	# Typically called multiple times during the _draw() phase. Override to handle the normal map if desired.
+	# 'normal_map' is either "null" or a Texture2D.
+	draw_mesh( mesh, texture )
 
 func prepare_to_draw()->bool:
 	if not definition or not definition.prepare_to_draw(): return false
