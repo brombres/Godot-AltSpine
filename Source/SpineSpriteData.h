@@ -36,6 +36,7 @@ class SpineSpriteData : public RefCounted
     Node*                  spine_sprite;
     spine::Skeleton*       skeleton = nullptr;
     spine::AnimationState* animation_state = nullptr;
+    spine::Vector<float>   vertex_data;
 
 		// CONSTRUCTOR METHODS
 		SpineSpriteData();
