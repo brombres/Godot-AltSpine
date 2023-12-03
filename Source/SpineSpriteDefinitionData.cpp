@@ -81,7 +81,7 @@ bool SpineSpriteDefinitionData::configure( Variant spine_sprite_definition, Vari
   return true;
 }
 
-bool SpineSpriteDefinitionData::prepare_to_draw( Variant gd_atlas )
+bool SpineSpriteDefinitionData::is_ready( Variant gd_atlas )
 {
   if ( !skeleton_data && !configure(spine_sprite_definition,gd_atlas) ) return false;
   return true;
@@ -111,7 +111,7 @@ void SpineSpriteDefinitionData::update_mix_times()
 void SpineSpriteDefinitionData::_bind_methods()
 {
 	ClassDB::bind_method( D_METHOD("configure","spine_sprite_definition"), &SpineSpriteDefinitionData::configure );
-	ClassDB::bind_method( D_METHOD("prepare_to_draw","atlas"),             &SpineSpriteDefinitionData::prepare_to_draw );
+	ClassDB::bind_method( D_METHOD("is_ready","atlas"),             &SpineSpriteDefinitionData::is_ready );
 	ClassDB::bind_method( D_METHOD("reset"),                               &SpineSpriteDefinitionData::reset );
 	ClassDB::bind_method( D_METHOD("update_mix_times"),                    &SpineSpriteDefinitionData::update_mix_times );
 }

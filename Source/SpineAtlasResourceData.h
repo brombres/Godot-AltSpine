@@ -36,7 +36,7 @@ class SpineAtlasResourceData : public RefCounted
 
 		// METHODS
     bool configure( Variant spine_atlas_resource );
-    bool prepare_to_draw();
+    bool is_ready();
 
 };
 

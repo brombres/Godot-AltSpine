@@ -27,8 +27,8 @@ var _atlas_data_pointer:int # Internal use only.
 
 var data:SpineAtlasResourceData
 
-func prepare_to_draw():
+func is_ready():
 	if not data:
 		data = SpineAtlasResourceData.new()
 		data.configure( self )
-	return data.prepare_to_draw()
+	return data.is_ready()

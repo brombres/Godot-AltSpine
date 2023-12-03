@@ -3,12 +3,29 @@ class_name SpineSprite
 extends Node2D
 
 const SpineSpriteDefinition = preload("SpineSpriteDefinition.gd")
-@export var definition:SpineSpriteDefinition
+
+@export var definition:SpineSpriteDefinition :
+	set(value):
+		if definition != value:
+			if definition and definition.changed.is_connected(_on_definition_changed):
+				definition.changed.disconnect( _on_definition_changed )
+
+			definition = value
+
+			if definition and not definition.changed.is_connected(_on_definition_changed):
+				definition.changed.connect( _on_definition_changed )
+
+			_on_definition_changed()
 
 var data:SpineSpriteData
 var mesh_builder:SurfaceTool = SurfaceTool.new()
 var mesh:ArrayMesh
 
+func is_ready()->bool:
+	## Returns true if this SpineSprite is ready to update or draw.
+	if not definition or not definition.is_ready(): return false
+	if not data or not data.is_ready(): return false
+	return true
 
 func _ready():
 	_configure_resources()
@@ -23,11 +40,11 @@ func _exit_tree():
 		renamed.disconnect( _configure_resources )
 
 func _process( _dt:float ):
-	if data: data.update( _dt )
+	if is_ready(): data.update( _dt )
 	queue_redraw()
 
 func _draw():
-	if prepare_to_draw():
+	if is_ready():
 		mesh_builder.clear()
 		mesh_builder.begin( Mesh.PRIMITIVE_TRIANGLES )
 
@@ -50,6 +67,9 @@ func _handle_draw( texture_index:int, blend_mode:int ):
 	mesh_builder.clear()
 	mesh_builder.begin( Mesh.PRIMITIVE_TRIANGLES )
 
+func _on_definition_changed():
+	if data: data.reset()
+
 func _on_draw( mesh:ArrayMesh, texture:Texture2D, normal_map, _blend_mode:int ):
 	## Typically called multiple times during the _draw() phase. Override to handle the normal map if desired.
 	## 'normal_map' is either "null" or a Texture2D.
@@ -60,11 +80,6 @@ func _on_draw( mesh:ArrayMesh, texture:Texture2D, normal_map, _blend_mode:int ):
 	##	  MULTIPLY = 2
 	##	  SCREEN   = 3
 	draw_mesh( mesh, texture )
-
-func prepare_to_draw()->bool:
-	if not definition or not definition.prepare_to_draw(): return false
-	if not data or not data.prepare_to_draw(): return false
-	return true
 
 func _configure_resources():
 	if definition or not Engine.is_editor_hint(): return
@@ -109,7 +124,6 @@ func _configure_resources_with_folder( folder:String )->bool:
 	definition.atlas = atlas
 
 	return true
-
 
 func _count_files( folder:String, match_fn:Callable )->int:
 	if folder == "res://bin": return 0

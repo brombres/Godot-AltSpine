@@ -45,7 +45,7 @@ class SpineSpriteData : public RefCounted
 		// GENERAL METHODS
     void configure( Node* spine_sprite );
     void draw( SurfaceTool* mesh_builder, Variant on_draw_callback );
-    bool prepare_to_draw();
+    bool is_ready();
     void reset();
     void update( double dt );
 };

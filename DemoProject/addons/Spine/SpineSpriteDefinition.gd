@@ -22,12 +22,16 @@ const SpineAtlasResource = preload("SpineAtlasResource.gd")
 var data:SpineSpriteDefinitionData
 var _data_pointer:int
 
-func _init():
-	prints("Initializing SpineSpriteDefinition")
+func is_ready()->bool:
+	if not skeleton or not atlas or not data: return false
+
+	if not atlas.is_ready():     return false
+	if not data.is_ready(atlas): return false
+
+	return true
 
 func _notification( what ):
 	if what == NOTIFICATION_PREDELETE:
-		prints("Deinitializing SpineSpriteDefinition")
 		if data: data.reset()
 		if skeleton and skeleton.changed.is_connected(_configure):
 			skeleton.changed.disconnect( _configure )
@@ -35,7 +39,6 @@ func _notification( what ):
 			atlas.changed.disconnect( _configure )
 
 func _configure():
-	prints( "Configuring SpineSpriteDefinition" )
 	if data: data.reset()
 	if skeleton and not skeleton.changed.is_connected( _configure ):
 		skeleton.changed.connect( _configure )
@@ -45,10 +48,3 @@ func _configure():
 		if not data: data = SpineSpriteDefinitionData.new()
 		data.configure( self, atlas )
 
-func prepare_to_draw()->bool:
-	if not skeleton or not atlas or not data: return false
-
-	if not atlas.prepare_to_draw():     return false
-	if not data.prepare_to_draw(atlas): return false
-
-	return true

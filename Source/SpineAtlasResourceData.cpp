@@ -93,7 +93,7 @@ bool SpineAtlasResourceData::configure( Variant spine_atlas_resource )
   return true;
 }
 
-bool SpineAtlasResourceData::prepare_to_draw()
+bool SpineAtlasResourceData::is_ready()
 {
   if ( !spine_atlas_resource ) return false;
   if ( !atlas && !configure(spine_atlas_resource) ) return false;
@@ -103,5 +103,5 @@ bool SpineAtlasResourceData::prepare_to_draw()
 void SpineAtlasResourceData::_bind_methods()
 {
 	ClassDB::bind_method( D_METHOD("configure","spine_atlas_resource"), &SpineAtlasResourceData::configure );
-	ClassDB::bind_method( D_METHOD("prepare_to_draw"), &SpineAtlasResourceData::prepare_to_draw );
+	ClassDB::bind_method( D_METHOD("is_ready"), &SpineAtlasResourceData::is_ready );
 }

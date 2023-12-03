@@ -43,7 +43,7 @@ class SpineSpriteDefinitionData : public RefCounted
 
 		// GENERAL METHODS
     bool configure( Variant spine_sprite_definition, Variant gd_atlas );
-    bool prepare_to_draw( Variant gd_atlas );
+    bool is_ready( Variant gd_atlas );
     void reset();
     void update_mix_times();
 };

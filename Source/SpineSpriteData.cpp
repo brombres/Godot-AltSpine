@@ -10,17 +10,7 @@ SpineSpriteData::SpineSpriteData()
 
 SpineSpriteData::~SpineSpriteData()
 {
-  if (animation_state)
-  {
-    delete animation_state;
-    animation_state = nullptr;
-  }
-
-  if (skeleton)
-  {
-    delete skeleton;
-    skeleton = nullptr;
-  }
+  reset();
 }
 
 void SpineSpriteData::configure( Node* spine_sprite )
@@ -159,28 +149,41 @@ void SpineSpriteData::draw( SurfaceTool* mesh_builder, Variant on_draw_callback 
   }
 }
 
-bool SpineSpriteData::prepare_to_draw()
-{
-  if ( !skeleton ) return false;
-  return true;
-}
-
-void SpineSpriteData::update( double dt )
+bool SpineSpriteData::is_ready()
 {
   if ( !skeleton )
   {
     Variant v_def = ((Object*)spine_sprite)->get("definition");
-    if ( !v_def ) return;
+    if ( !v_def ) return false;
 
     SpineSpriteDefinitionData* def = (SpineSpriteDefinitionData*)(void*)(intptr_t)(uint64_t)(((Object*)v_def)->get("_data_pointer"));
-    if ( !def ) return;
-    if ( !def->skeleton_data || !def->animation_state_data ) return;
+    if ( !def ) return false;
+    if ( !def->skeleton_data || !def->animation_state_data ) return false;
 
     skeleton = new spine::Skeleton( def->skeleton_data );
     animation_state = new spine::AnimationState( def->animation_state_data );
     animation_state->addAnimation(0, "idle_shield_1", true, 0);
   }
+  return true;
+}
 
+void SpineSpriteData::reset()
+{
+  if (animation_state)
+  {
+    delete animation_state;
+    animation_state = nullptr;
+  }
+
+  if (skeleton)
+  {
+    delete skeleton;
+    skeleton = nullptr;
+  }
+}
+
+void SpineSpriteData::update( double dt )
+{
   animation_state->update( dt );
   animation_state->apply( *skeleton );
   skeleton->updateWorldTransform();
@@ -190,6 +193,7 @@ void SpineSpriteData::_bind_methods()
 {
 	ClassDB::bind_method( D_METHOD("configure","spine_sprite"),	              &SpineSpriteData::configure );
 	ClassDB::bind_method( D_METHOD("draw","mesh_builder","on_draw_callback"), &SpineSpriteData::draw );
-	ClassDB::bind_method( D_METHOD("prepare_to_draw"),	                      &SpineSpriteData::prepare_to_draw );
+	ClassDB::bind_method( D_METHOD("is_ready"),	                              &SpineSpriteData::is_ready );
+	ClassDB::bind_method( D_METHOD("reset"),                                  &SpineSpriteData::reset );
 	ClassDB::bind_method( D_METHOD("update","dt"),	                          &SpineSpriteData::update );
 }
