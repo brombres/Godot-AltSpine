@@ -61,7 +61,7 @@ void SpineSpriteData::draw( SurfaceTool* mesh_builder, Variant on_draw_callback 
   //mesh_builder->add_index( 1 );
   //mesh_builder->add_index( 2 );
 
-  int triangle_count = 0;
+  int vertex_count = 0;
   int texture_index = 0;
   int blend_mode = 0;
 	// NORMAL   = 0
@@ -102,11 +102,11 @@ void SpineSpriteData::draw( SurfaceTool* mesh_builder, Variant on_draw_callback 
         new_blend_mode = 0;
     }
 
-    if (new_blend_mode != texture_index && triangle_count)
+    if (new_blend_mode != texture_index && vertex_count)
     {
       // Render the current mesh_builder contents using the old blend mode.
       on_draw_callback.call( "call", texture_index, blend_mode );
-      triangle_count = 0;
+      vertex_count = 0;
     }
     blend_mode = new_blend_mode;
 
@@ -137,56 +137,32 @@ void SpineSpriteData::draw( SurfaceTool* mesh_builder, Variant on_draw_callback 
       // assigned to the attachment on load. It represents the texture atlas
       // page that contains the image the region attachment is mapped to.
 			int new_texture_index = (int)(intptr_t)(((spine::AtlasRegion*)regionAttachment->getRegion())->page->texture);
-      if (new_texture_index != texture_index && triangle_count)
+      if (new_texture_index != texture_index && vertex_count)
       {
         // Render the current mesh_builder contents using the old texture before starting on the new indices.
         on_draw_callback.call( "call", texture_index, blend_mode );
-        triangle_count = 0;
+        vertex_count = 0;
       }
       texture_index = new_texture_index;
 
       // Add vertex, UV, and color information to the mesh builder.
       float* uvs = regionAttachment->getUVs().buffer();
       float* v_buffer = vertex_data.buffer();
-      //for (size_t j=0; j<8; j+=2)
-      //{
-      //  mesh_builder->set_color( tint );
-      //  mesh_builder->set_uv( Vector2(uvs[j],uvs[j+1]) );
-      //  mesh_builder->add_vertex( Vector3(v_buffer[j],-v_buffer[j+1],0) );
-      //}
+      for (size_t j=0; j<8; j+=2)
+      {
+        mesh_builder->set_color( tint );
+        mesh_builder->set_uv( Vector2(uvs[j],uvs[j+1]) );
+        mesh_builder->add_vertex( Vector3(v_buffer[j],-v_buffer[j+1],0) );
+      }
 
-      //mesh_builder->add_index( 0 );
-      //mesh_builder->add_index( 1 );
-      //mesh_builder->add_index( 2 );
-      //mesh_builder->add_index( 2 );
-      //mesh_builder->add_index( 3 );
-      //mesh_builder->add_index( 0 );
+      mesh_builder->add_index( vertex_count+0 );
+      mesh_builder->add_index( vertex_count+1 );
+      mesh_builder->add_index( vertex_count+2 );
+      mesh_builder->add_index( vertex_count+2 );
+      mesh_builder->add_index( vertex_count+3 );
+      mesh_builder->add_index( vertex_count+0 );
 
-      mesh_builder->set_color( tint );
-      mesh_builder->set_uv(          Vector2(uvs[0],      uvs[1]) );
-      mesh_builder->add_vertex( Vector3(v_buffer[0],-v_buffer[1],0) );
-
-      mesh_builder->set_color( tint );
-      mesh_builder->set_uv(          Vector2(uvs[2],      uvs[3]) );
-      mesh_builder->add_vertex( Vector3(v_buffer[2],-v_buffer[3],0) );
-
-      mesh_builder->set_color( tint );
-      mesh_builder->set_uv(          Vector2(uvs[4],      uvs[5]) );
-      mesh_builder->add_vertex( Vector3(v_buffer[4],-v_buffer[5],0) );
-
-      mesh_builder->set_color( tint );
-      mesh_builder->set_uv(          Vector2(uvs[4],      uvs[5]) );
-      mesh_builder->add_vertex( Vector3(v_buffer[4],-v_buffer[5],0) );
-
-      mesh_builder->set_color( tint );
-      mesh_builder->set_uv(          Vector2(uvs[6],      uvs[7]) );
-      mesh_builder->add_vertex( Vector3(v_buffer[6],-v_buffer[7],0) );
-
-      mesh_builder->set_color( tint );
-      mesh_builder->set_uv(          Vector2(uvs[0],      uvs[1]) );
-      mesh_builder->add_vertex( Vector3(v_buffer[0],-v_buffer[1],0) );
-
-      triangle_count += 2;
+      vertex_count += 4;
     }
     else if (attachment->getRTTI().isExactly(spine::MeshAttachment::rtti))
     {
@@ -195,7 +171,6 @@ void SpineSpriteData::draw( SurfaceTool* mesh_builder, Variant on_draw_callback 
       spine::MeshAttachment* mesh = (spine::MeshAttachment*)attachment;
 
       // Ensure there is enough room for vertices
-      size_t vertex_count = mesh->getWorldVerticesLength() / 2;  // each vertex is an (x,y) pair
       vertex_data.setSize( mesh->getWorldVerticesLength(), 0.0f );
 
       // Computed the world vertices positions for the vertices that make up
@@ -210,51 +185,51 @@ void SpineSpriteData::draw( SurfaceTool* mesh_builder, Variant on_draw_callback 
       // page that contains the image the region attachment is mapped to.
 
 			int new_texture_index = (int)(intptr_t)(((spine::AtlasRegion*) mesh->getRegion())->page->texture);
-      if (new_texture_index != texture_index && triangle_count)
+      if (new_texture_index != texture_index && vertex_count)
       {
         // Render the current mesh_builder contents using the old texture before starting on the new indices.
         on_draw_callback.call( "call", texture_index, blend_mode );
-        triangle_count = 0;
+        vertex_count = 0;
       }
       texture_index = new_texture_index;
 
-      //float* uvs = mesh->getUVs().buffer();
-      //float* v_buffer = vertex_data.buffer();
-      //size_t v_count  = vertex_data.size();
-      //for (size_t j=0; j<v_count; j+=2)
-      //{
-      //  mesh_builder->set_color( tint );
-      //  mesh_builder->set_uv( Vector2(uvs[j],uvs[j+1]) );
-      //  mesh_builder->add_vertex( Vector3(v_buffer[j],-v_buffer[j+1],0) );
-      //}
-
-      //spine::Vector<unsigned short> indices = mesh->getTriangles();
-      //size_t index_count = indices.size();
-      //for (size_t j=0; j<index_count; ++j)
-      //{
-      //  mesh_builder->add_index( indices[j] );
-      //}
-
       float* uvs = mesh->getUVs().buffer();
       float* v_buffer = vertex_data.buffer();
+      size_t v_count  = vertex_data.size();
+      for (size_t j=0; j<v_count; j+=2)
+      {
+        mesh_builder->set_color( tint );
+        mesh_builder->set_uv( Vector2(uvs[j],uvs[j+1]) );
+        mesh_builder->add_vertex( Vector3(v_buffer[j],-v_buffer[j+1],0) );
+      }
+
       spine::Vector<unsigned short> indices = mesh->getTriangles();
       size_t index_count = indices.size();
       for (size_t j=0; j<index_count; ++j)
       {
-        int v = indices[j] << 1;
-        mesh_builder->set_color( tint );
-        mesh_builder->set_uv(          Vector2(uvs[v],      uvs[v+1]) );
-        mesh_builder->add_vertex( Vector3(v_buffer[v],-v_buffer[v+1],0) );
+        mesh_builder->add_index( vertex_count+indices[j] );
       }
 
-      triangle_count += (int)(index_count / 3);
+      //float* uvs = mesh->getUVs().buffer();
+      //float* v_buffer = vertex_data.buffer();
+      //spine::Vector<unsigned short> indices = mesh->getTriangles();
+      //size_t index_count = indices.size();
+      //for (size_t j=0; j<index_count; ++j)
+      //{
+      //  int v = indices[j] << 1;
+      //  mesh_builder->set_color( tint );
+      //  mesh_builder->set_uv(          Vector2(uvs[v],      uvs[v+1]) );
+      //  mesh_builder->add_vertex( Vector3(v_buffer[v],-v_buffer[v+1],0) );
+      //}
+
+      vertex_count += (int)(vertex_data.size()/2);
     }
   }
 
-  if (triangle_count)
+  if (vertex_count)
   {
     on_draw_callback.call( "call", texture_index, blend_mode );
-    triangle_count = 0;
+    vertex_count = 0;
   }
 }
 

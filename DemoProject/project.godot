@@ -15,6 +15,16 @@ run/main_scene="res://Test.tscn"
 config/features=PackedStringArray("4.2", "Mobile")
 config/icon="res://icon.svg"
 
+[debug]
+
+settings/stdout/print_fps=true
+
+[display]
+
+window/size/viewport_width=1179
+window/size/viewport_height=2556
+window/handheld/orientation=1
+
 [editor_plugins]
 
 enabled=PackedStringArray("res://addons/Spine/plugin.cfg")
@@ -22,3 +32,4 @@ enabled=PackedStringArray("res://addons/Spine/plugin.cfg")
 [rendering]
 
 renderer/rendering_method="mobile"
+textures/vram_compression/import_etc2_astc=true

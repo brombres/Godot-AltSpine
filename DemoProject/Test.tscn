@@ -12,6 +12,172 @@ atlas = ExtResource("2_76f3l")
 
 [node name="Node2D" type="Node2D"]
 
-[node name="SpineSprite" type="Node2D" parent="."]
+[node name="Row" type="Node2D" parent="."]
+
+[node name="SpineSprite" type="Node2D" parent="Row"]
+position = Vector2(61, 79)
+scale = Vector2(0.08, 0.08)
+script = ExtResource("1_1htx1")
+definition = SubResource("Resource_hgkgq")
+
+[node name="SpineSprite2" type="Node2D" parent="Row"]
+position = Vector2(192, 79)
+scale = Vector2(0.08, 0.08)
+script = ExtResource("1_1htx1")
+definition = SubResource("Resource_hgkgq")
+
+[node name="SpineSprite3" type="Node2D" parent="Row"]
+position = Vector2(323, 79)
+scale = Vector2(0.08, 0.08)
+script = ExtResource("1_1htx1")
+definition = SubResource("Resource_hgkgq")
+
+[node name="SpineSprite4" type="Node2D" parent="Row"]
+position = Vector2(454, 79)
+scale = Vector2(0.08, 0.08)
+script = ExtResource("1_1htx1")
+definition = SubResource("Resource_hgkgq")
+
+[node name="SpineSprite5" type="Node2D" parent="Row"]
+position = Vector2(585, 79)
+scale = Vector2(0.08, 0.08)
+script = ExtResource("1_1htx1")
+definition = SubResource("Resource_hgkgq")
+
+[node name="SpineSprite6" type="Node2D" parent="Row"]
+position = Vector2(716, 79)
+scale = Vector2(0.08, 0.08)
+script = ExtResource("1_1htx1")
+definition = SubResource("Resource_hgkgq")
+
+[node name="SpineSprite7" type="Node2D" parent="Row"]
+position = Vector2(847, 79)
+scale = Vector2(0.08, 0.08)
+script = ExtResource("1_1htx1")
+definition = SubResource("Resource_hgkgq")
+
+[node name="SpineSprite8" type="Node2D" parent="Row"]
+position = Vector2(978, 79)
+scale = Vector2(0.08, 0.08)
+script = ExtResource("1_1htx1")
+definition = SubResource("Resource_hgkgq")
+
+[node name="SpineSprite9" type="Node2D" parent="Row"]
+position = Vector2(1109, 79)
+scale = Vector2(0.08, 0.08)
+script = ExtResource("1_1htx1")
+definition = SubResource("Resource_hgkgq")
+
+[node name="Row2" type="Node2D" parent="."]
+position = Vector2(2.08165e-12, 131)
+
+[node name="SpineSprite" type="Node2D" parent="Row2"]
+position = Vector2(61, 79)
+scale = Vector2(0.08, 0.08)
+script = ExtResource("1_1htx1")
+definition = SubResource("Resource_hgkgq")
+
+[node name="SpineSprite2" type="Node2D" parent="Row2"]
+position = Vector2(192, 79)
+scale = Vector2(0.08, 0.08)
+script = ExtResource("1_1htx1")
+definition = SubResource("Resource_hgkgq")
+
+[node name="SpineSprite3" type="Node2D" parent="Row2"]
+position = Vector2(323, 79)
+scale = Vector2(0.5, 0.5)
+script = ExtResource("1_1htx1")
+definition = SubResource("Resource_hgkgq")
+
+[node name="SpineSprite4" type="Node2D" parent="Row2"]
+position = Vector2(454, 79)
+scale = Vector2(0.08, 0.08)
+script = ExtResource("1_1htx1")
+definition = SubResource("Resource_hgkgq")
+
+[node name="SpineSprite5" type="Node2D" parent="Row2"]
+position = Vector2(585, 79)
+scale = Vector2(0.08, 0.08)
+script = ExtResource("1_1htx1")
+definition = SubResource("Resource_hgkgq")
+
+[node name="SpineSprite6" type="Node2D" parent="Row2"]
+position = Vector2(716, 79)
+scale = Vector2(0.08, 0.08)
+script = ExtResource("1_1htx1")
+definition = SubResource("Resource_hgkgq")
+
+[node name="SpineSprite7" type="Node2D" parent="Row2"]
+position = Vector2(847, 79)
+scale = Vector2(0.08, 0.08)
+script = ExtResource("1_1htx1")
+definition = SubResource("Resource_hgkgq")
+
+[node name="SpineSprite8" type="Node2D" parent="Row2"]
+position = Vector2(978, 79)
+scale = Vector2(0.08, 0.08)
+script = ExtResource("1_1htx1")
+definition = SubResource("Resource_hgkgq")
+
+[node name="SpineSprite9" type="Node2D" parent="Row2"]
+position = Vector2(1109, 79)
+scale = Vector2(0.08, 0.08)
+script = ExtResource("1_1htx1")
+definition = SubResource("Resource_hgkgq")
+
+[node name="Row3" type="Node2D" parent="."]
+position = Vector2(2.08165e-12, 262)
+
+[node name="SpineSprite" type="Node2D" parent="Row3"]
+position = Vector2(61, 79)
+scale = Vector2(0.08, 0.08)
+script = ExtResource("1_1htx1")
+definition = SubResource("Resource_hgkgq")
+
+[node name="SpineSprite2" type="Node2D" parent="Row3"]
+position = Vector2(192, 79)
+scale = Vector2(0.08, 0.08)
+script = ExtResource("1_1htx1")
+definition = SubResource("Resource_hgkgq")
+
+[node name="SpineSprite3" type="Node2D" parent="Row3"]
+position = Vector2(323, 79)
+scale = Vector2(0.08, 0.08)
+script = ExtResource("1_1htx1")
+definition = SubResource("Resource_hgkgq")
+
+[node name="SpineSprite4" type="Node2D" parent="Row3"]
+position = Vector2(454, 79)
+scale = Vector2(0.08, 0.08)
+script = ExtResource("1_1htx1")
+definition = SubResource("Resource_hgkgq")
+
+[node name="SpineSprite5" type="Node2D" parent="Row3"]
+position = Vector2(585, 79)
+scale = Vector2(0.08, 0.08)
+script = ExtResource("1_1htx1")
+definition = SubResource("Resource_hgkgq")
+
+[node name="SpineSprite6" type="Node2D" parent="Row3"]
+position = Vector2(716, 79)
+scale = Vector2(0.08, 0.08)
+script = ExtResource("1_1htx1")
+definition = SubResource("Resource_hgkgq")
+
+[node name="SpineSprite7" type="Node2D" parent="Row3"]
+position = Vector2(847, 79)
+scale = Vector2(0.08, 0.08)
+script = ExtResource("1_1htx1")
+definition = SubResource("Resource_hgkgq")
+
+[node name="SpineSprite8" type="Node2D" parent="Row3"]
+position = Vector2(978, 79)
+scale = Vector2(0.08, 0.08)
+script = ExtResource("1_1htx1")
+definition = SubResource("Resource_hgkgq")
+
+[node name="SpineSprite9" type="Node2D" parent="Row3"]
+position = Vector2(1109, 79)
+scale = Vector2(0.08, 0.08)
 script = ExtResource("1_1htx1")
 definition = SubResource("Resource_hgkgq")
