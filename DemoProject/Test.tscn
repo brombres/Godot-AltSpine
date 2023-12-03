@@ -1,11 +1,11 @@
 [gd_scene load_steps=6 format=3 uid="uid://bkb8trkwnpabq"]
 
 [ext_resource type="Script" path="res://addons/Spine/SpineSprite.gd" id="1_1htx1"]
-[ext_resource type="Resource" uid="uid://c84cjsj8s78ud" path="res://Spine.atlas" id="2_byy14"]
+[ext_resource type="Resource" uid="uid://cnb2w2r4kotec" path="res://Spine.atlas" id="2_byy14"]
 [ext_resource type="Script" path="res://addons/Spine/SpineSpriteDefinition.gd" id="3_jkcmo"]
 [ext_resource type="Resource" uid="uid://cou581wy34du5" path="res://Axor.skel" id="4_cua4c"]
 
-[sub_resource type="Resource" id="Resource_nrr0i"]
+[sub_resource type="Resource" id="Resource_t6sj2"]
 script = ExtResource("3_jkcmo")
 skeleton = ExtResource("4_cua4c")
 atlas = ExtResource("2_byy14")
@@ -16,4 +16,4 @@ atlas = ExtResource("2_byy14")
 position = Vector2(237, 259)
 scale = Vector2(0.25, 0.25)
 script = ExtResource("1_1htx1")
-definition = SubResource("Resource_nrr0i")
+definition = SubResource("Resource_t6sj2")

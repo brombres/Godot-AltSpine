@@ -19,7 +19,8 @@ const SpineSpriteDefinition = preload("SpineSpriteDefinition.gd")
 
 var data:SpineSpriteData
 var mesh_builder:SurfaceTool = SurfaceTool.new()
-var mesh:ArrayMesh
+var drawing_meshes:Array[ArrayMesh]
+var used_drawing_mesh_count := 0
 
 func is_ready()->bool:
 	## Returns true if this SpineSprite is ready to update or draw.
@@ -45,6 +46,8 @@ func _process( _dt:float ):
 
 func _draw():
 	if is_ready():
+		used_drawing_mesh_count = 0
+
 		mesh_builder.clear()
 		mesh_builder.begin( Mesh.PRIMITIVE_TRIANGLES )
 
@@ -56,11 +59,18 @@ func _handle_draw( texture_index:int, blend_mode:int ):
 		var texture = atlas.textures[texture_index]
 		var normal_map = atlas.normal_maps[texture_index] if texture_index < atlas.normal_maps.size() else null
 
-		if mesh:
+		var mesh:ArrayMesh
+		if used_drawing_mesh_count <  drawing_meshes.size():
+			mesh = drawing_meshes[ used_drawing_mesh_count ]
+			used_drawing_mesh_count += 1
+
 			mesh.clear_surfaces()
 			mesh_builder.commit( mesh )
+
 		else:
 			mesh = mesh_builder.commit()
+			drawing_meshes.push_back( mesh )
+			used_drawing_mesh_count += 1
 
 		_on_draw( mesh, texture, normal_map, blend_mode )
 
