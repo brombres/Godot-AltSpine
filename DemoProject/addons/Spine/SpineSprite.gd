@@ -48,7 +48,7 @@ func is_ready()->bool:
 	return true
 
 func set_animation( name:String, looping:bool=false, track_index:int=0 ):
-	if is_ready: data.set_animation( name, looping, track_index )
+	if is_ready(): data.set_animation( name, looping, track_index )
 
 func _ready():
 	_configure_resources()

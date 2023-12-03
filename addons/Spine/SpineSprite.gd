@@ -25,6 +25,7 @@ var default_animation := "(none)" :
 	set(value):
 		if default_animation != value:
 			default_animation = value
+			if preview_animation and value != "(none)": set_animation( value, true )
 
 var data:SpineSpriteData
 var mesh_builder:SurfaceTool = SurfaceTool.new()
@@ -47,7 +48,7 @@ func is_ready()->bool:
 	return true
 
 func set_animation( name:String, looping:bool=false, track_index:int=0 ):
-	if is_ready: data.set_animation( name, looping, track_index )
+	if is_ready(): data.set_animation( name, looping, track_index )
 
 func _ready():
 	_configure_resources()
