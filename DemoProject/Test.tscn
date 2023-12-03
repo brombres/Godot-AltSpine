@@ -17,3 +17,4 @@ position = Vector2(237, 259)
 scale = Vector2(0.25, 0.25)
 script = ExtResource("1_1htx1")
 definition = SubResource("Resource_t6sj2")
+default_animation = "idle_axe_no_shield_1"

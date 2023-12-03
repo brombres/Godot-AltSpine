@@ -25,7 +25,6 @@ var default_animation := "(none)" :
 	set(value):
 		if default_animation != value:
 			default_animation = value
-			if preview_animation and value != "(none)": set_animation( value, true )
 
 var data:SpineSpriteData
 var mesh_builder:SurfaceTool = SurfaceTool.new()

@@ -18,6 +18,19 @@ SpineSpriteDefinitionData::~SpineSpriteDefinitionData()
   reset();
 }
 
+void SpineSpriteDefinitionData::collect_animation_names( Variant array )
+{
+  if ( !skeleton_data ) return;
+
+  Array name_list = (Array)array;
+
+  spine::Vector<spine::Animation*> animations = skeleton_data->getAnimations();
+  for (int i=0; i<animations.size(); ++i)
+  {
+    name_list.push_back( String(animations[i]->getName().buffer()) );
+  }
+}
+
 bool SpineSpriteDefinitionData::configure( Variant spine_sprite_definition, Variant gd_atlas )
 {
   reset();
@@ -110,8 +123,9 @@ void SpineSpriteDefinitionData::update_mix_times()
 
 void SpineSpriteDefinitionData::_bind_methods()
 {
+	ClassDB::bind_method( D_METHOD("collect_animation_names"),             &SpineSpriteDefinitionData::collect_animation_names );
 	ClassDB::bind_method( D_METHOD("configure","spine_sprite_definition"), &SpineSpriteDefinitionData::configure );
-	ClassDB::bind_method( D_METHOD("is_ready","atlas"),             &SpineSpriteDefinitionData::is_ready );
+	ClassDB::bind_method( D_METHOD("is_ready","atlas"),                    &SpineSpriteDefinitionData::is_ready );
 	ClassDB::bind_method( D_METHOD("reset"),                               &SpineSpriteDefinitionData::reset );
 	ClassDB::bind_method( D_METHOD("update_mix_times"),                    &SpineSpriteDefinitionData::update_mix_times );
 }

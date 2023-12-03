@@ -162,7 +162,6 @@ bool SpineSpriteData::is_ready()
 
     skeleton = new spine::Skeleton( def->skeleton_data );
     animation_state = new spine::AnimationState( def->animation_state_data );
-    animation_state->addAnimation(0, "idle_shield_1", true, 0);
   }
   return true;
 }
@@ -182,6 +181,11 @@ void SpineSpriteData::reset()
   }
 }
 
+void SpineSpriteData::set_animation( String name, bool looping, int track_index )
+{
+  if (animation_state) animation_state->setAnimation( track_index, name.utf8().get_data(), looping );
+}
+
 void SpineSpriteData::update( double dt )
 {
   animation_state->update( dt );
@@ -195,5 +199,17 @@ void SpineSpriteData::_bind_methods()
 	ClassDB::bind_method( D_METHOD("draw","mesh_builder","on_draw_callback"), &SpineSpriteData::draw );
 	ClassDB::bind_method( D_METHOD("is_ready"),	                              &SpineSpriteData::is_ready );
 	ClassDB::bind_method( D_METHOD("reset"),                                  &SpineSpriteData::reset );
+	ClassDB::bind_method( D_METHOD("set_animation","name","looping","track_index"),
+                        &SpineSpriteData::set_animation, DEFVAL(0), DEFVAL(false) );
 	ClassDB::bind_method( D_METHOD("update","dt"),	                          &SpineSpriteData::update );
 }
+
+//Archer          -22,  0  -0.17,  0.17
+//Axor             -7,  0   0.128, 0.128
+//Gladiator       -33,  0  -0.102, 0.102 idle_1
+//Guard           -10,-15  -0.15,  0.15
+//Lobber          -14,-26  -0.14,  0.14
+//Rifter           -4,-25  -0.13,  0.13
+//Rumbler         -11, -8   0.18,  0.18
+//ShieldGladiator -33,  0  -0.102, 0.102 idle_1
+//SpineSprite       0,-17  -0.13,  0.13

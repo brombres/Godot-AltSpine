@@ -493,28 +493,26 @@ endRoutine
 
 routine sync_products
   # Copy build products to synched output projects.
-  local needs_header = true
-  local message = "Synchronizing build products to linked projects"
-
   local synched_projects = String[]
   local file =  File("SynchedProjects.rogo")
   if (file.exists) synched_projects = String( file ).trimmed.split( '\n' )
 
-  forEach (project_filepath in synched_projects)
-    if (rogo_copy_products( project_filepath, &=needs_header ))
-      needs_header = false
-    endIf
-  endForEach
-
-  if (needs_header)
-    banner "All synchronized projects are up to date."
-  endIf
+  local synched_any = sync_products( synched_projects )
+  if (not synched_any) banner "All synchronized projects are up to date."
 endRoutine
 
-routine rogo_copy_products( project_filepath:String, &needs_header, w=Console.width:Int32 )->Logical
+routine sync_products( synched_projects:String[], &synched_any )->Logical
+  forEach (project_filepath in synched_projects)
+    if (rogo_copy_products( project_filepath, &=synched_any ))
+      synched_any = true
+    endIf
+  endForEach
+  return synched_any
+endRoutine
+
+routine rogo_copy_products( project_filepath:String, &synched_any, w=Console.width:Int32 )->Logical
   # Copy build products to a specific project folder.
   local message = "Synchronizing build products to linked projects"
-  local synched_any = false
 
   local project_folder = File( project_filepath )
   if (not project_folder.exists) return false
@@ -529,9 +527,8 @@ routine rogo_copy_products( project_filepath:String, &needs_header, w=Console.wi
   products.add( "*.so" )
   products.add( "*.wasm" )
   if (products.sync_to(bin,&dry_run,&keep_unused))
-    if (needs_header)
+    if (not synched_any)
       banner( message, w )
-      needs_header = false
       synched_any = true
     endIf
     products.sync_to( bin, &verbose, &keep_unused )

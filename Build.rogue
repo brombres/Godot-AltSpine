@@ -7,6 +7,19 @@ $requireRogue "2.28"
 uses Utility/FilePatcher
 uses Utility/VersionNumber
 
+routine sync_products( synched_projects:String[], &synched_any )->Logical [insert]
+  local files = Files( "addons/**" )
+  forEach (project in synched_projects)
+    if (files.sync_to(project/"addons",&keep_unused,&dry_run))
+      if (not synched_any)
+        banner "Synchronizing build products to linked projects"
+        synched_any = true
+      endIf
+      files.sync_to( project/"addons", &keep_unused, &verbose )
+    endIf
+  endForEach
+endRoutine
+
 routine rogo_update_version( version:String )
   # Updates the version number and date in the project source and README.md.
   if (not version) version = ""

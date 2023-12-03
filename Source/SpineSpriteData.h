@@ -47,6 +47,7 @@ class SpineSpriteData : public RefCounted
     void draw( SurfaceTool* mesh_builder, Variant on_draw_callback );
     bool is_ready();
     void reset();
+    void set_animation( String name, bool looping=false, int track_index=0 );
     void update( double dt );
 };
 

@@ -42,6 +42,7 @@ class SpineSpriteDefinitionData : public RefCounted
 		// PROPERTY ACCESS METHODS
 
 		// GENERAL METHODS
+    void collect_animation_names( Variant array );
     bool configure( Variant spine_sprite_definition, Variant gd_atlas );
     bool is_ready( Variant gd_atlas );
     void reset();
