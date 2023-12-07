@@ -2,7 +2,16 @@
 class_name SpineSprite
 extends Node2D
 
+enum BlendMode
+{
+	NORMAL   = 0,
+	ADDITIVE = 1,
+	MULTIPLY = 2,
+	SCREEN   = 3
+}
+
 const SpineSpriteDefinition = preload("SpineSpriteDefinition.gd")
+const screen_shader = preload("SpineScreenBlendShader.gdshader")
 
 @export var definition:SpineSpriteDefinition :
 	set(value):
@@ -17,6 +26,17 @@ const SpineSpriteDefinition = preload("SpineSpriteDefinition.gd")
 
 			_on_definition_changed()
 
+@export var premultiplied_alpha := false :
+	set(value):
+		if premultiplied_alpha != value:
+			premultiplied_alpha = value
+		_prepare_materials()
+
+@export var normal_material:Material
+@export var additive_material:Material
+@export var multiply_material:Material
+@export var screen_material:Material
+
 @export var preview_animation := true
 
 @export var preview_frame := 0
@@ -28,11 +48,61 @@ var default_animation := "(none)" :
 			if preview_animation and value != "(none)": set_animation( value, true )
 
 var data:SpineSpriteData
-var mesh_builder:SurfaceTool = SurfaceTool.new()
-var drawing_meshes:Array[ArrayMesh]
-var used_drawing_mesh_count := 0
+var _mesh_builder:SurfaceTool = SurfaceTool.new()
+var _fragments:Array[SpineSpriteFragment] = []
+var _used_fragment_count := 0
+var _active_blend_mode := BlendMode.NORMAL
 
 var _animation_names = null
+
+var _materials:Array[Material] = []
+
+func _ready():
+	material = ShaderMaterial.new()
+	material.shader = screen_shader
+
+	_configure_resources()
+	data = SpineSpriteData.new()
+	data.configure( self )
+
+	_prepare_materials()
+
+	# Remove any old fragments (I don't *think* this could happen but just in case)
+	for child in get_children(true):
+		if child is SpineSpriteFragment:
+			child.queue_free()
+
+func _prepare_materials():
+	_materials = []
+
+	if normal_material:
+		_materials.push_back( normal_material )
+	else:
+		var material = CanvasItemMaterial.new()
+		if premultiplied_alpha:
+			material.blend_mode = CanvasItemMaterial.BlendMode.BLEND_MODE_PREMULT_ALPHA
+		_materials.push_back( material )
+
+	if additive_material:
+		_materials.push_back( additive_material )
+	else:
+		var material = CanvasItemMaterial.new()
+		material.blend_mode = CanvasItemMaterial.BlendMode.BLEND_MODE_ADD
+		_materials.push_back( material )
+
+	if multiply_material:
+		_materials.push_back( multiply_material )
+	else:
+		var material = CanvasItemMaterial.new()
+		material.blend_mode = CanvasItemMaterial.BlendMode.BLEND_MODE_MUL
+		_materials.push_back( material )
+
+	if screen_material:
+		_materials.push_back( screen_material )
+	else:
+		var material = ShaderMaterial.new()
+		material.shader = screen_shader
+		_materials.push_back( material )
 
 func is_ready()->bool:
 	## Returns true if this SpineSprite is ready to update or draw.
@@ -50,11 +120,6 @@ func is_ready()->bool:
 func set_animation( name:String, looping:bool=false, track_index:int=0 ):
 	if is_ready(): data.set_animation( name, looping, track_index )
 
-func _ready():
-	_configure_resources()
-	data = SpineSpriteData.new()
-	data.configure( self )
-
 func _enter_tree():
 	renamed.connect( _configure_resources )
 
@@ -63,55 +128,42 @@ func _exit_tree():
 		renamed.disconnect( _configure_resources )
 
 func _process( _dt:float ):
-	if is_ready(): data.update( _dt )
-	queue_redraw()
-
-func _draw():
 	if is_ready():
-		used_drawing_mesh_count = 0
+		data.update( _dt )
+		_used_fragment_count = 0
 
-		mesh_builder.clear()
-		mesh_builder.begin( Mesh.PRIMITIVE_TRIANGLES )
+		_mesh_builder.clear()
+		_mesh_builder.begin( Mesh.PRIMITIVE_TRIANGLES )
 
-		data.draw( mesh_builder, _handle_draw )
+		data.draw( _mesh_builder, _construct_fragment )
 
-func _handle_draw( texture_index:int, blend_mode:int ):
+		while _used_fragment_count < _fragments.size():
+			_fragments[_used_fragment_count].visible = false
+			_used_fragment_count += 1
+
+func _construct_fragment( texture_index:int, blend_mode:BlendMode ):
 	var atlas = definition.atlas
 	if texture_index < atlas.textures.size():
 		var texture = atlas.textures[texture_index]
-		var normal_map = atlas.normal_maps[texture_index] if texture_index < atlas.normal_maps.size() else null
+		#var normal_map = atlas.normal_maps[texture_index] if texture_index < atlas.normal_maps.size() else null
 
-		var mesh:ArrayMesh
-		if used_drawing_mesh_count <  drawing_meshes.size():
-			mesh = drawing_meshes[ used_drawing_mesh_count ]
-			used_drawing_mesh_count += 1
-
-			mesh.clear_surfaces()
-			mesh_builder.commit( mesh )
-
+		var fragment:SpineSpriteFragment
+		if _used_fragment_count <  _fragments.size():
+			fragment = _fragments[ _used_fragment_count ]
 		else:
-			mesh = mesh_builder.commit()
-			drawing_meshes.push_back( mesh )
-			used_drawing_mesh_count += 1
+			fragment = SpineSpriteFragment.new()
+			add_child( fragment )
+			_fragments.push_back( fragment )
+		_used_fragment_count += 1
 
-		_on_draw( mesh, texture, normal_map, blend_mode )
+		fragment.visible = true
+		fragment.update_mesh( _mesh_builder, _materials[int(blend_mode)], texture )
 
-	mesh_builder.clear()
-	mesh_builder.begin( Mesh.PRIMITIVE_TRIANGLES )
+	_mesh_builder.clear()
+	_mesh_builder.begin( Mesh.PRIMITIVE_TRIANGLES )
 
 func _on_definition_changed():
 	if data: data.reset()
-
-func _on_draw( mesh:ArrayMesh, texture:Texture2D, normal_map, _blend_mode:int ):
-	## Typically called multiple times during the _draw() phase. Override to handle the normal map if desired.
-	## 'normal_map' is either "null" or a Texture2D.
-	##
-	## Blend Modes
-	##	  NORMAL   = 0
-	##	  ADDITIVE = 1
-	##	  MULTIPLY = 2
-	##	  SCREEN   = 3
-	draw_mesh( mesh, texture )
 
 func _configure_resources():
 	if definition or not Engine.is_editor_hint(): return

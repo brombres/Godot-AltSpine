@@ -15,9 +15,11 @@ func _enter_tree():
 	add_import_plugin( skeleton_importer )
 
 	add_custom_type( "SpineSpriteDefinition", "Resource", preload("SpineSpriteDefinition.gd"), null )
-	add_custom_type( "SpineSprite", "Resource", preload("SpineSprite.gd"), null )
+	add_custom_type( "SpineSprite",         "Node2D", preload("SpineSprite.gd"),         null )
+	add_custom_type( "SpineSpriteFragment", "Node2D", preload("SpineSpriteFragment.gd"), null )
 
 func _exit_tree():
+	remove_custom_type( "SpineSpriteFragment" )
 	remove_custom_type( "SpineSprite" )
 	remove_custom_type( "SpineSpriteDefinition" )
 
