@@ -43,11 +43,17 @@ class SpineSpriteData : public RefCounted
 		~SpineSpriteData();
 
 		// GENERAL METHODS
+    void add_animation( int track_index, String name, bool looping, float delay );
+    void add_empty_animation( int track_index, float mix_duration, float delay );
+    void clear_track( int track_index );
+    void clear_tracks();
     void configure( Node* spine_sprite );
     void draw( SurfaceTool* mesh_builder, Variant on_draw_callback );
     bool is_ready();
     void reset();
-    void set_animation( String name, bool looping=false, int track_index=0 );
+    void set_animation( int track_index, String name, bool looping );
+    void set_empty_animation( int track_index, float mix_duration );
+    void set_empty_animations( float mix_duration );
     void update( double dt );
 };
 

@@ -41,11 +41,12 @@ const screen_shader = preload("SpineScreenBlendShader.gdshader")
 
 @export var preview_frame := 0
 
-var default_animation := "(none)" :
+var default_animation := "" :
 	set(value):
 		if default_animation != value:
 			default_animation = value
-			if preview_animation and value != "(none)": set_animation( value, true )
+			if Engine.is_editor_hint() and preview_animation and value != "":
+				set_animation( value, true )
 
 var data:SpineSpriteData
 var _mesh_builder:SurfaceTool = SurfaceTool.new()
@@ -54,8 +55,8 @@ var _used_fragment_count := 0
 var _active_blend_mode := BlendMode.NORMAL
 
 var _animation_names = null
-
 var _materials:Array[Material] = []
+var _is_ready := false
 
 func _ready():
 	material = ShaderMaterial.new()
@@ -106,19 +107,56 @@ func _prepare_materials():
 
 func is_ready()->bool:
 	## Returns true if this SpineSprite is ready to update or draw.
+	if _is_ready: return true
 	if not definition or not definition.is_ready(): return false
 	if not data or not data.is_ready(): return false
 	if not _animation_names:
 		_animation_names = definition.get_animation_names()
 		_animation_names.push_front( "(none)" )
 		notify_property_list_changed()
-		if (preview_animation or not Engine.is_editor_hint()) and default_animation != "(none)":
-			data.set_animation( default_animation, true )
+
+		if default_animation == "" and _animation_names.count > 1:
+			default_animation = _animation_names[1];
+		elif Engine.is_editor_hint() and preview_animation:
+			set_animation( default_animation, true )
+
+	if not Engine.is_editor_hint():
+		# Don't cache the result in the Editor because the linked resources can be altered.
+		_is_ready = true
 
 	return true
 
+func add_animation( name:String, delay:float=0.0, looping:bool=false, track_index:int=0 ):
+	if is_ready():
+		if name == "(none)":           set_empty_animations()
+		elif name in _animation_names: data.add_animation( track_index, name, looping, delay )
+
+func add_empty_animation( delay:float=0.0, mix_duration:float=0.0, track_index:int=0 ):
+	if is_ready():
+		data.add_empty_animation( track_index, mix_duration, delay )
+
+func clear_tracks( tracks=null ):
+	if is_ready():
+		if tracks:
+			for track_index in tracks:
+				data.clear_track( track_index )
+		else:
+			data.clear_tracks()
+
 func set_animation( name:String, looping:bool=false, track_index:int=0 ):
-	if is_ready(): data.set_animation( name, looping, track_index )
+	if is_ready():
+		if name == "(none)":           data.set_empty_animation( track_index, 0.5 )
+		elif name in _animation_names: data.set_animation( track_index, name, looping )
+
+func set_empty_animations( mix_duration:float=0.0, tracks=null ):
+	if is_ready():
+		if tracks:
+			for track_index in tracks:
+				data.set_empty_animation( track_index, mix_duration )
+		else:
+			data.set_empty_animations( mix_duration )
+
+#-------------------------------------------------------------------------------
 
 func _enter_tree():
 	renamed.connect( _configure_resources )

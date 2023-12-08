@@ -13,6 +13,26 @@ SpineSpriteData::~SpineSpriteData()
   reset();
 }
 
+void SpineSpriteData::add_animation( int track_index, String name, bool looping, float delay )
+{
+  if (animation_state) animation_state->addAnimation( track_index, name.utf8().get_data(), looping, delay );
+}
+
+void SpineSpriteData::add_empty_animation( int track_index, float mix_duration, float delay )
+{
+  if (animation_state) animation_state->addEmptyAnimation( track_index, mix_duration, delay );
+}
+
+void SpineSpriteData::clear_track( int track_index )
+{
+  if (animation_state) animation_state->clearTrack( track_index );
+}
+
+void SpineSpriteData::clear_tracks()
+{
+  if (animation_state) animation_state->clearTracks();
+}
+
 void SpineSpriteData::configure( Node* spine_sprite )
 {
   this->spine_sprite = spine_sprite;
@@ -181,9 +201,19 @@ void SpineSpriteData::reset()
   }
 }
 
-void SpineSpriteData::set_animation( String name, bool looping, int track_index )
+void SpineSpriteData::set_animation( int track_index, String name, bool looping )
 {
   if (animation_state) animation_state->setAnimation( track_index, name.utf8().get_data(), looping );
+}
+
+void SpineSpriteData::set_empty_animation( int track_index, float mix_duration )
+{
+  if (animation_state) animation_state->setEmptyAnimation( track_index, mix_duration );
+}
+
+void SpineSpriteData::set_empty_animations( float mix_duration )
+{
+  if (animation_state) animation_state->setEmptyAnimations( mix_duration );
 }
 
 void SpineSpriteData::update( double dt )
@@ -195,12 +225,17 @@ void SpineSpriteData::update( double dt )
 
 void SpineSpriteData::_bind_methods()
 {
+	ClassDB::bind_method( D_METHOD("add_animation","track_index","name","looping","delay"), &SpineSpriteData::add_animation );
+	ClassDB::bind_method( D_METHOD("add_empty_animation","track_index","mix_duration","delay"), &SpineSpriteData::add_empty_animation );
+	ClassDB::bind_method( D_METHOD("clear_track","track_index"),              &SpineSpriteData::clear_track );
+	ClassDB::bind_method( D_METHOD("clear_tracks"),                           &SpineSpriteData::clear_tracks );
 	ClassDB::bind_method( D_METHOD("configure","spine_sprite"),	              &SpineSpriteData::configure );
 	ClassDB::bind_method( D_METHOD("draw","mesh_builder","on_draw_callback"), &SpineSpriteData::draw );
 	ClassDB::bind_method( D_METHOD("is_ready"),	                              &SpineSpriteData::is_ready );
 	ClassDB::bind_method( D_METHOD("reset"),                                  &SpineSpriteData::reset );
-	ClassDB::bind_method( D_METHOD("set_animation","name","looping","track_index"),
-                        &SpineSpriteData::set_animation, DEFVAL(0), DEFVAL(false) );
+	ClassDB::bind_method( D_METHOD("set_animation","track_index","name","looping"), &SpineSpriteData::set_animation );
+	ClassDB::bind_method( D_METHOD("set_empty_animation","track_index","mix_duration"), &SpineSpriteData::set_empty_animation );
+	ClassDB::bind_method( D_METHOD("set_empty_animations","mix_duration"),    &SpineSpriteData::set_empty_animations );
 	ClassDB::bind_method( D_METHOD("update","dt"),	                          &SpineSpriteData::update );
 }
 
