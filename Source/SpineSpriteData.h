@@ -24,6 +24,23 @@
 
 using namespace godot;
 
+class SpineSpriteData;
+
+//==============================================================================
+// SpineSpriteAnimationEventListener
+//==============================================================================
+class SpineSpriteAnimationEventListener : public spine::AnimationStateListenerObject
+{
+  public:
+    SpineSpriteData* data;
+
+		virtual void callback( spine::AnimationState *state, spine::EventType type, spine::TrackEntry *entry, spine::Event *event );
+};
+
+
+//==============================================================================
+// SpineSpriteData
+//==============================================================================
 class SpineSpriteData : public RefCounted
 {
 	GDCLASS( SpineSpriteData, RefCounted );
@@ -37,24 +54,36 @@ class SpineSpriteData : public RefCounted
     spine::Skeleton*       skeleton = nullptr;
     spine::AnimationState* animation_state = nullptr;
     spine::Vector<float>   vertex_data;
+    SpineSpriteAnimationEventListener listener;
 
 		// CONSTRUCTOR METHODS
 		SpineSpriteData();
 		~SpineSpriteData();
 
 		// GENERAL METHODS
-    void add_animation( int track_index, String name, bool looping, float delay );
-    void add_empty_animation( int track_index, float mix_duration, float delay );
-    void clear_track( int track_index );
-    void clear_tracks();
-    void configure( Node* spine_sprite );
-    void draw( SurfaceTool* mesh_builder, Variant on_draw_callback );
-    bool is_ready();
-    void reset();
-    void set_animation( int track_index, String name, bool looping );
-    void set_empty_animation( int track_index, float mix_duration );
-    void set_empty_animations( float mix_duration );
-    void update( double dt );
+    void    add_animation( int track_index, String name, bool looping, float delay );
+    void    add_empty_animation( int track_index, float mix_duration, float delay );
+    void    clear_track( int track_index );
+    void    clear_tracks();
+    void    configure( Node* spine_sprite );
+    void    draw( SurfaceTool* mesh_builder, Variant on_draw_callback );
+    int64_t get_point_attachment( String slot_name, String attachment_name );
+    Vector2 get_point_attachment_local_position( int64_t attachment_pointer );
+    float   get_point_attachment_local_rotation( int64_t attachment_pointer );
+    Vector2 get_point_attachment_position( int64_t attachment_pointer, int64_t bone_pointer );
+    float   get_point_attachment_rotation( int64_t attachment_pointer, int64_t bone_pointer );
+    float   get_time_scale();
+    bool    is_ready();
+    void    reset();
+    void    set_animation( int track_index, String name, bool looping );
+    void    set_attachment( String slot_name, Variant attachment_name );
+    void    set_point_attachment_local_position( int64_t attachment_pointer, Vector2 position );
+    void    set_point_attachment_local_rotation( int64_t attachment_pointer, float rotation );
+    void    set_empty_animation( int track_index, float mix_duration );
+    void    set_empty_animations( float mix_duration );
+    void    set_skin( Variant name );
+    void    set_time_scale( float scale );
+    void    update( double dt );
 };
 
 #endif // SPINESPRITEDATA_H

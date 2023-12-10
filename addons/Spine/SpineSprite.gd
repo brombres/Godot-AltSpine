@@ -2,6 +2,16 @@
 class_name SpineSprite
 extends Node2D
 
+enum AnimationEventType
+{
+	START      = 0,
+	INTERRUPT  = 1,
+	END        = 2,
+	COMPLETE   = 3,
+	DISPOSE    = 4,
+	USER_EVENT = 5
+}
+
 enum BlendMode
 {
 	NORMAL   = 0,
@@ -37,15 +47,16 @@ const screen_shader = preload("SpineScreenBlendShader.gdshader")
 @export var multiply_material:Material
 @export var screen_material:Material
 
-@export var preview_animation := true
-
-@export var preview_frame := 0
+@export var time_scale := 1.0 :
+	set(value):
+		time_scale = value
+		if data: data.set_time_scale( value )
 
 var default_animation := "" :
 	set(value):
 		if default_animation != value:
 			default_animation = value
-			if Engine.is_editor_hint() and preview_animation and value != "":
+			if Engine.is_editor_hint() and value != "":
 				set_animation( value, true )
 
 var data:SpineSpriteData
@@ -115,10 +126,12 @@ func is_ready()->bool:
 		_animation_names.push_front( "(none)" )
 		notify_property_list_changed()
 
-		if default_animation == "" and _animation_names.count > 1:
+		if default_animation == "" and _animation_names.size() > 1:
 			default_animation = _animation_names[1];
-		elif Engine.is_editor_hint() and preview_animation:
+		else:
 			set_animation( default_animation, true )
+
+	data.set_time_scale( time_scale )
 
 	if not Engine.is_editor_hint():
 		# Don't cache the result in the Editor because the linked resources can be altered.
@@ -155,6 +168,10 @@ func set_empty_animations( mix_duration:float=0.0, tracks=null ):
 				data.set_empty_animation( track_index, mix_duration )
 		else:
 			data.set_empty_animations( mix_duration )
+
+func set_skin( name:Variant ):
+	## name - a string name or else 'null' to set the default skin.
+	if is_ready(): data.set_skin( name )
 
 #-------------------------------------------------------------------------------
 
@@ -199,6 +216,9 @@ func _construct_fragment( texture_index:int, blend_mode:BlendMode ):
 
 	_mesh_builder.clear()
 	_mesh_builder.begin( Mesh.PRIMITIVE_TRIANGLES )
+
+func _handle_animation_event( type:AnimationEventType, playback_id:int, animation_name:String, track_index:int, user_event_name:Variant ):
+	prints( type, playback_id, animation_name, track_index, user_event_name )
 
 func _on_definition_changed():
 	if data: data.reset()

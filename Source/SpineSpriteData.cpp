@@ -4,6 +4,32 @@
 
 using namespace godot;
 
+//==============================================================================
+// SpineSpriteAnimationEventListener
+//==============================================================================
+void SpineSpriteAnimationEventListener::callback( spine::AnimationState *state,
+    spine::EventType type, spine::TrackEntry *entry, spine::Event *event )
+{
+  Variant user_event_name;
+  if (event) user_event_name = String( event->getData().getName().buffer() );
+
+  if (data && data->animation_state)
+  {
+    data->spine_sprite->call(
+      "_handle_animation_event",
+      (int)type,
+      (int64_t)(intptr_t)entry,
+      String(entry->getAnimation()->getName().buffer()),
+      entry->getTrackIndex(),
+      user_event_name
+    );
+  }
+}
+
+//==============================================================================
+// SpineSpriteData
+//==============================================================================
+
 SpineSpriteData::SpineSpriteData()
 {
 }
@@ -169,6 +195,59 @@ void SpineSpriteData::draw( SurfaceTool* mesh_builder, Variant on_draw_callback 
   }
 }
 
+int64_t SpineSpriteData::get_point_attachment( String slot_name, String attachment_name )
+{
+  if ( !skeleton ) return 0;
+  spine::Attachment* attachment = skeleton->getAttachment( slot_name.utf8().get_data(), attachment_name.utf8().get_data() );
+  if (attachment && attachment->getRTTI().isExactly(spine::PointAttachment::rtti))
+  {
+    return (int64_t)(intptr_t)attachment;
+  }
+  else
+  {
+    return 0;
+  }
+}
+
+Vector2 SpineSpriteData::get_point_attachment_local_position( int64_t attachment_pointer )
+{
+  spine::PointAttachment* attachment = (spine::PointAttachment*)(int64_t)attachment_pointer;
+  if ( !attachment ) return Vector2(0,0);
+  return Vector2( attachment->getX(), attachment->getY() );
+}
+
+float SpineSpriteData::get_point_attachment_local_rotation( int64_t attachment_pointer )
+{
+  spine::PointAttachment* attachment = (spine::PointAttachment*)(int64_t)attachment_pointer;
+  if ( !attachment ) return 0;
+  return attachment->getRotation();
+}
+
+Vector2 SpineSpriteData::get_point_attachment_position( int64_t attachment_pointer, int64_t bone_pointer )
+{
+  spine::PointAttachment* attachment = (spine::PointAttachment*)(int64_t)attachment_pointer;
+  if ( !attachment ) return Vector2(0,0);
+  spine::Bone* bone = (spine::Bone*)(int64_t)bone_pointer;
+  if ( !bone ) return Vector2(0,0);
+  float x, y;
+  attachment->computeWorldPosition( *bone, x, y );
+  return Vector2( x, y );
+}
+
+float SpineSpriteData::get_point_attachment_rotation( int64_t attachment_pointer, int64_t bone_pointer )
+{
+  spine::PointAttachment* attachment = (spine::PointAttachment*)(int64_t)attachment_pointer;
+  if ( !attachment ) return 0;
+  spine::Bone* bone = (spine::Bone*)(int64_t)bone_pointer;
+  if ( !bone ) return 0;
+  return attachment->computeWorldRotation( *bone );
+}
+
+float SpineSpriteData::get_time_scale()
+{
+  return animation_state && animation_state->getTimeScale();
+}
+
 bool SpineSpriteData::is_ready()
 {
   if ( !skeleton )
@@ -182,6 +261,8 @@ bool SpineSpriteData::is_ready()
 
     skeleton = new spine::Skeleton( def->skeleton_data );
     animation_state = new spine::AnimationState( def->animation_state_data );
+    listener.data = this;
+    animation_state->setListener( &listener );
   }
   return true;
 }
@@ -206,6 +287,30 @@ void SpineSpriteData::set_animation( int track_index, String name, bool looping 
   if (animation_state) animation_state->setAnimation( track_index, name.utf8().get_data(), looping );
 }
 
+void SpineSpriteData::set_attachment( String slot_name, Variant attachment_name )
+{
+  if (skeleton)
+  {
+    if ( !attachment_name ) attachment_name = "";
+    skeleton->setAttachment( slot_name.utf8().get_data(), String(attachment_name).utf8().get_data() );
+  }
+}
+
+void SpineSpriteData::set_point_attachment_local_position( int64_t attachment_pointer, Vector2 position )
+{
+  spine::PointAttachment* attachment = (spine::PointAttachment*)(int64_t)attachment_pointer;
+  if ( !attachment ) return;
+  attachment->setX( position.x );
+  attachment->setY( position.y );
+}
+
+void SpineSpriteData::set_point_attachment_local_rotation( int64_t attachment_pointer, float rotation )
+{
+  spine::PointAttachment* attachment = (spine::PointAttachment*)(int64_t)attachment_pointer;
+  if ( !attachment ) return;
+  attachment->setRotation( rotation );
+}
+
 void SpineSpriteData::set_empty_animation( int track_index, float mix_duration )
 {
   if (animation_state) animation_state->setEmptyAnimation( track_index, mix_duration );
@@ -214,6 +319,20 @@ void SpineSpriteData::set_empty_animation( int track_index, float mix_duration )
 void SpineSpriteData::set_empty_animations( float mix_duration )
 {
   if (animation_state) animation_state->setEmptyAnimations( mix_duration );
+}
+
+void SpineSpriteData::set_skin( Variant name )
+{
+  if (skeleton)
+  {
+    if (name) skeleton->setSkin( String(name).utf8().get_data() );
+    else      skeleton->setSkin( nullptr );
+  }
+}
+
+void SpineSpriteData::set_time_scale( float scale )
+{
+  if (animation_state) animation_state->setTimeScale( scale );
 }
 
 void SpineSpriteData::update( double dt )
@@ -231,20 +350,27 @@ void SpineSpriteData::_bind_methods()
 	ClassDB::bind_method( D_METHOD("clear_tracks"),                           &SpineSpriteData::clear_tracks );
 	ClassDB::bind_method( D_METHOD("configure","spine_sprite"),	              &SpineSpriteData::configure );
 	ClassDB::bind_method( D_METHOD("draw","mesh_builder","on_draw_callback"), &SpineSpriteData::draw );
-	ClassDB::bind_method( D_METHOD("is_ready"),	                              &SpineSpriteData::is_ready );
-	ClassDB::bind_method( D_METHOD("reset"),                                  &SpineSpriteData::reset );
+	ClassDB::bind_method( D_METHOD("get_point_attachment","slot_name","attachment_name"), &SpineSpriteData::get_point_attachment );
+	ClassDB::bind_method( D_METHOD("get_point_attachment_local_position","attachment_pointer"),
+                        &SpineSpriteData::get_point_attachment_local_position );
+	ClassDB::bind_method( D_METHOD("get_point_attachment_local_rotation","attachment_pointer"),
+                        &SpineSpriteData::get_point_attachment_local_rotation );
+	ClassDB::bind_method( D_METHOD("get_point_attachment_position","attachment_pointer","bone_pointer"),
+                        &SpineSpriteData::get_point_attachment_position );
+	ClassDB::bind_method( D_METHOD("get_point_attachment_rotation","attachment_pointer","bone_pointer"),
+                        &SpineSpriteData::get_point_attachment_rotation );
+	ClassDB::bind_method( D_METHOD("get_time_scale"),                           &SpineSpriteData::get_time_scale );
+	ClassDB::bind_method( D_METHOD("is_ready"),	                                &SpineSpriteData::is_ready );
+	ClassDB::bind_method( D_METHOD("reset"),                                    &SpineSpriteData::reset );
 	ClassDB::bind_method( D_METHOD("set_animation","track_index","name","looping"), &SpineSpriteData::set_animation );
+	ClassDB::bind_method( D_METHOD("set_attachment","slot_name","attachment_name"), &SpineSpriteData::set_attachment );
+	ClassDB::bind_method( D_METHOD("set_point_attachment_local_position","position"),
+                        &SpineSpriteData::set_point_attachment_local_position );
+	ClassDB::bind_method( D_METHOD("set_point_attachment_local_rotation","rotation"),
+                        &SpineSpriteData::set_point_attachment_local_rotation );
 	ClassDB::bind_method( D_METHOD("set_empty_animation","track_index","mix_duration"), &SpineSpriteData::set_empty_animation );
 	ClassDB::bind_method( D_METHOD("set_empty_animations","mix_duration"),    &SpineSpriteData::set_empty_animations );
+	ClassDB::bind_method( D_METHOD("set_skin","name"),                        &SpineSpriteData::set_skin );
+	ClassDB::bind_method( D_METHOD("set_time_scale","scale"),                 &SpineSpriteData::set_time_scale );
 	ClassDB::bind_method( D_METHOD("update","dt"),	                          &SpineSpriteData::update );
 }
-
-//Archer          -22,  0  -0.17,  0.17
-//Axor             -7,  0   0.128, 0.128
-//Gladiator       -33,  0  -0.102, 0.102 idle_1
-//Guard           -10,-15  -0.15,  0.15
-//Lobber          -14,-26  -0.14,  0.14
-//Rifter           -4,-25  -0.13,  0.13
-//Rumbler         -11, -8   0.18,  0.18
-//ShieldGladiator -33,  0  -0.102, 0.102 idle_1
-//SpineSprite       0,-17  -0.13,  0.13
