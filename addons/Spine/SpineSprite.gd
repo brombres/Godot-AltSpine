@@ -1,10 +1,23 @@
 @tool
+
+## A 2D sprite that animates and displays a Spine animation.
+##
+## In the Spine editor, export a Spine project using binary skeleton data (".skel") with a corresponding texture atlas (".atlas").
+##
+## SpineSprite is auto-configuring. If you create a SpineSprite and name it "XYZ", the sprite will scan the project folder
+## for an "XYZ.skel" skeleton and an "XYZ.atlas" atlas, and auto-assign them to the sprite. If "XYZ.atlas" does not exist
+## but there is just one other ".atlas" file, that other ".atlas" file will be assigned.
 class_name SpineSprite
 extends Node2D
 
+## Emitted with a SpineAnimationEvent object that describes an animation state change.
 signal animation_event( e:SpineAnimationEvent )
+
+## Emitted when the Spine skeleton has been updated in [method _process]. Useful for precisely synchronizing
+## other object positions to point attachments.
 signal updated
 
+## [INTERNAL USE]
 enum BlendMode
 {
 	NORMAL   = 0,
@@ -16,6 +29,7 @@ enum BlendMode
 const SpineSpriteDefinition = preload("SpineSpriteDefinition.gd")
 const screen_shader = preload("SpineScreenBlendShader.gdshader")
 
+## A resource that contains references to a pair of [SpineSkeletonResource] and [SpineAtlasResource] resources.
 @export var definition:SpineSpriteDefinition :
 	set(value):
 		if definition != value:
@@ -29,17 +43,30 @@ const screen_shader = preload("SpineScreenBlendShader.gdshader")
 
 			_on_definition_changed()
 
+## Enable if the spine atlas resource is imported with premultiplied alpha enabled.
 @export var premultiplied_alpha := false :
 	set(value):
 		if premultiplied_alpha != value:
 			premultiplied_alpha = value
 		_prepare_materials()
 
+@export_group("Materials")
+
+## Optional material to use for sprite fragments drawn in normal (mix) blending mode. If left empty then SpineSprite will use a default normal blending material.
 @export var normal_material:Material
+
+## Optional material to use for sprite fragments drawn in additive blending mode. If left empty then SpineSprite will use a default additive blending material.
 @export var additive_material:Material
+
+## Optional material to use for sprite fragments drawn in multiply blending mode. If left empty then SpineSprite will use a default multiply blending material.
 @export var multiply_material:Material
+
+## Optional material to use for sprite fragments drawn in screen blending mode. If left empty then SpineSprite will use a default screen blending material.
 @export var screen_material:Material
 
+@export_group("Animation")
+
+## The default time scale.
 @export var time_scale := 1.0 :
 	set(value):
 		time_scale = value
