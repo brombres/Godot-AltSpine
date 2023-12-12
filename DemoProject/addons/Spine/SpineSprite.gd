@@ -2,15 +2,8 @@
 class_name SpineSprite
 extends Node2D
 
-enum AnimationEventType
-{
-	START      = 0,
-	INTERRUPT  = 1,
-	END        = 2,
-	COMPLETE   = 3,
-	DISPOSE    = 4,
-	USER_EVENT = 5
-}
+signal animation_event( e:SpineAnimationEvent )
+signal updated
 
 enum BlendMode
 {
@@ -69,6 +62,8 @@ var _animation_names = null
 var _materials:Array[Material] = []
 var _is_ready := false
 
+var _active_animations:Dictionary = {}
+
 func _ready():
 	material = ShaderMaterial.new()
 	material.shader = screen_shader
@@ -116,6 +111,16 @@ func _prepare_materials():
 		material.shader = screen_shader
 		_materials.push_back( material )
 
+func is_playing( animation_name:Variant )->bool:
+	if _active_animations:
+		if animation_name:
+			for i in _active_animations:
+				var a = _active_animations[i]
+				if a.animation_name == animation_name: return true
+		else:
+			return _active_animations.size() > 0
+	return false
+
 func is_ready()->bool:
 	## Returns true if this SpineSprite is ready to update or draw.
 	if _is_ready: return true
@@ -139,10 +144,10 @@ func is_ready()->bool:
 
 	return true
 
-func add_animation( name:String, delay:float=0.0, looping:bool=false, track_index:int=0 ):
+func add_animation( name:String, delay:float=0.0, looping:bool=false, track_index:int=0, time_scale:float=1 ):
 	if is_ready():
 		if name == "(none)":           set_empty_animations()
-		elif name in _animation_names: data.add_animation( track_index, name, looping, delay )
+		elif name in _animation_names: data.add_animation( track_index, name, looping, delay, time_scale )
 
 func add_empty_animation( delay:float=0.0, mix_duration:float=0.0, track_index:int=0 ):
 	if is_ready():
@@ -156,10 +161,16 @@ func clear_tracks( tracks=null ):
 		else:
 			data.clear_tracks()
 
-func set_animation( name:String, looping:bool=false, track_index:int=0 ):
+func get_point_attachment( slot_name:String, attachment_name:String )->Variant:
+	if not is_ready(): return null
+	var attachment_id = data.get_point_attachment( slot_name, attachment_name )
+	if not attachment_id: return 0
+	return SpinePointAttachment.new( self, attachment_id, slot_name )
+
+func set_animation( name:String, looping:bool=false, track_index:int=0, time_scale:float=1 ):
 	if is_ready():
 		if name == "(none)":           data.set_empty_animation( track_index, 0.5 )
-		elif name in _animation_names: data.set_animation( track_index, name, looping )
+		elif name in _animation_names: data.set_animation( track_index, name, looping, time_scale )
 
 func set_empty_animations( mix_duration:float=0.0, tracks=null ):
 	if is_ready():
@@ -196,6 +207,8 @@ func _process( _dt:float ):
 			_fragments[_used_fragment_count].visible = false
 			_used_fragment_count += 1
 
+		updated.emit()
+
 func _construct_fragment( texture_index:int, blend_mode:BlendMode ):
 	var atlas = definition.atlas
 	if texture_index < atlas.textures.size():
@@ -217,8 +230,22 @@ func _construct_fragment( texture_index:int, blend_mode:BlendMode ):
 	_mesh_builder.clear()
 	_mesh_builder.begin( Mesh.PRIMITIVE_TRIANGLES )
 
-func _handle_animation_event( type:AnimationEventType, playback_id:int, animation_name:String, track_index:int, user_event_name:Variant ):
-	prints( type, playback_id, animation_name, track_index, user_event_name )
+func _handle_animation_event( type:SpineAnimationEvent.Type, track_entry_id:int, animation_name:String, track_index:int,
+		user_event_name:Variant ):
+	var e = SpineAnimationEvent.new( type, track_entry_id, animation_name, track_index, user_event_name )
+
+	match e.type:
+		SpineAnimationEvent.Type.START:
+			_active_animations[e.track_entry_id] = e
+		SpineAnimationEvent.Type.COMPLETE:
+			pass  # not the end if looping
+		SpineAnimationEvent.Type.USER_EVENT:
+			pass
+		_:
+			if _active_animations:
+				_active_animations.erase( e.track_entry_id )
+
+	animation_event.emit( e )
 
 func _on_definition_changed():
 	if data: data.reset()

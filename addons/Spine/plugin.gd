@@ -17,8 +17,12 @@ func _enter_tree():
 	add_custom_type( "SpineSpriteDefinition", "Resource", preload("SpineSpriteDefinition.gd"), null )
 	add_custom_type( "SpineSprite",         "Node2D", preload("SpineSprite.gd"),         null )
 	add_custom_type( "SpineSpriteFragment", "Node2D", preload("SpineSpriteFragment.gd"), null )
+	add_custom_type( "SpineAnimationEvent", "RefCounted", preload("SpineAnimationEvent.gd"), null )
+	add_custom_type( "SpinePointAttachment", "RefCounted", preload("SpinePointAttachment.gd"), null )
 
 func _exit_tree():
+	remove_custom_type( "SpinePointAttachment" )
+	remove_custom_type( "SpineAnimationEvent" )
 	remove_custom_type( "SpineSpriteFragment" )
 	remove_custom_type( "SpineSprite" )
 	remove_custom_type( "SpineSpriteDefinition" )

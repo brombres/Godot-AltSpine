@@ -61,7 +61,7 @@ class SpineSpriteData : public RefCounted
 		~SpineSpriteData();
 
 		// GENERAL METHODS
-    void    add_animation( int track_index, String name, bool looping, float delay );
+    int64_t add_animation( int track_index, String name, bool looping, float delay, float time_scale );
     void    add_empty_animation( int track_index, float mix_duration, float delay );
     void    clear_track( int track_index );
     void    clear_tracks();
@@ -70,12 +70,12 @@ class SpineSpriteData : public RefCounted
     int64_t get_point_attachment( String slot_name, String attachment_name );
     Vector2 get_point_attachment_local_position( int64_t attachment_pointer );
     float   get_point_attachment_local_rotation( int64_t attachment_pointer );
-    Vector2 get_point_attachment_position( int64_t attachment_pointer, int64_t bone_pointer );
-    float   get_point_attachment_rotation( int64_t attachment_pointer, int64_t bone_pointer );
+    Vector2 get_point_attachment_position( int64_t attachment_pointer, String slot_name );
+    float   get_point_attachment_rotation( int64_t attachment_pointer, String slot_name );
     float   get_time_scale();
     bool    is_ready();
     void    reset();
-    void    set_animation( int track_index, String name, bool looping );
+    int64_t set_animation( int track_index, String name, bool looping, float time_scale );
     void    set_attachment( String slot_name, Variant attachment_name );
     void    set_point_attachment_local_position( int64_t attachment_pointer, Vector2 position );
     void    set_point_attachment_local_rotation( int64_t attachment_pointer, float rotation );
