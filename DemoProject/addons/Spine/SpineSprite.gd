@@ -66,12 +66,13 @@ const screen_shader = preload("SpineScreenBlendShader.gdshader")
 
 @export_group("Animation")
 
-## The default time scale.
+## The master animation time scale. Multiplies any 'time_scale' parameters set for individual animations.
 @export var time_scale := 1.0 :
 	set(value):
 		time_scale = value
 		if data: data.set_time_scale( value )
 
+## The default animation that will play when the sprite is instantiated.
 var default_animation := "" :
 	set(value):
 		if default_animation != value:
@@ -79,13 +80,19 @@ var default_animation := "" :
 			if Engine.is_editor_hint() and value != "":
 				set_animation( value, true )
 
+## A string list of all animation names available to this sprite. Will be 'null' if the sprite
+## definition is not configured. Note that this Godot Spine extension adds a special animation
+## called "(none)" at the beginning of the list.
+var animation_names = null
+
+## Native sprite data that interfaces with the 'spine-cpp' library.
 var data:SpineSpriteData
+
 var _mesh_builder:SurfaceTool = SurfaceTool.new()
 var _fragments:Array[SpineSpriteFragment] = []
 var _used_fragment_count := 0
 var _active_blend_mode := BlendMode.NORMAL
 
-var _animation_names = null
 var _materials:Array[Material] = []
 var _is_ready := false
 
@@ -138,6 +145,8 @@ func _prepare_materials():
 		material.shader = screen_shader
 		_materials.push_back( material )
 
+## Returns true if the named animation is currently playing on any track.
+## If 'animation_name' is null, returns true if any animation is playing on any track.
 func is_playing( animation_name:Variant )->bool:
 	if _active_animations:
 		if animation_name:
@@ -148,18 +157,18 @@ func is_playing( animation_name:Variant )->bool:
 			return _active_animations.size() > 0
 	return false
 
+## Returns true if this SpineSprite is ready to update or draw.
 func is_ready()->bool:
-	## Returns true if this SpineSprite is ready to update or draw.
 	if _is_ready: return true
 	if not definition or not definition.is_ready(): return false
 	if not data or not data.is_ready(): return false
-	if not _animation_names:
-		_animation_names = definition.get_animation_names()
-		_animation_names.push_front( "(none)" )
+	if not animation_names:
+		animation_names = definition.get_animation_names()
+		animation_names.push_front( "(none)" )
 		notify_property_list_changed()
 
-		if default_animation == "" and _animation_names.size() > 1:
-			default_animation = _animation_names[1];
+		if default_animation == "" and animation_names.size() > 1:
+			default_animation = animation_names[1];
 		else:
 			set_animation( default_animation, true )
 
@@ -171,15 +180,23 @@ func is_ready()->bool:
 
 	return true
 
+## Queues the named animation to play.
 func add_animation( name:String, delay:float=0.0, looping:bool=false, track_index:int=0, time_scale:float=1 ):
 	if is_ready():
 		if name == "(none)":           set_empty_animations()
-		elif name in _animation_names: data.add_animation( track_index, name, looping, delay, time_scale )
+		elif name in animation_names: data.add_animation( track_index, name, looping, delay, time_scale )
 
+## Queues an empty animation which returns the sprite to its starting pose.
+## Use a 'mix_duration' of 0.5 or so for a smooth transition.
 func add_empty_animation( delay:float=0.0, mix_duration:float=0.0, track_index:int=0 ):
 	if is_ready():
 		data.add_empty_animation( track_index, mix_duration, delay )
 
+## If 'tracks' is a list of integers, clears specific animation tracks with those indices.
+## If 'tracks' is omitted or null, all animation tracks are cleared.
+## Clearing animation tracks freezes the animation in its current state.
+## Use [method add_empty_animation] or [method set_empty_animations] instead to return the
+## sprite to its starting pose.
 func clear_tracks( tracks=null ):
 	if is_ready():
 		if tracks:
@@ -188,17 +205,22 @@ func clear_tracks( tracks=null ):
 		else:
 			data.clear_tracks()
 
+## Returns a [SpinePointAttachment] or 'null'.
 func get_point_attachment( slot_name:String, attachment_name:String )->Variant:
 	if not is_ready(): return null
 	var attachment_id = data.get_point_attachment( slot_name, attachment_name )
 	if not attachment_id: return 0
 	return SpinePointAttachment.new( self, attachment_id, slot_name )
 
+## Replaces any existing animation on the specified track.
 func set_animation( name:String, looping:bool=false, track_index:int=0, time_scale:float=1 ):
 	if is_ready():
 		if name == "(none)":           data.set_empty_animation( track_index, 0.5 )
-		elif name in _animation_names: data.set_animation( track_index, name, looping, time_scale )
+		elif name in animation_names: data.set_animation( track_index, name, looping, time_scale )
 
+## Sets empty animations on all active tracks, interrupting current animations and
+## returning the sprite to its starting pose.
+## Use a 'mix_duration' of 0.5 or so for a smooth transition.
 func set_empty_animations( mix_duration:float=0.0, tracks=null ):
 	if is_ready():
 		if tracks:
@@ -207,6 +229,8 @@ func set_empty_animations( mix_duration:float=0.0, tracks=null ):
 		else:
 			data.set_empty_animations( mix_duration )
 
+## Sets the sprite to use the specified skin name. The skin must have already been
+## defined in the Spine editor.
 func set_skin( name:Variant ):
 	## name - a string name or else 'null' to set the default skin.
 	if is_ready(): data.set_skin( name )
@@ -377,8 +401,8 @@ func _get_property_list():
 	var property_usage = PROPERTY_USAGE_NO_EDITOR
 
 	var hint_string = ""
-	if _animation_names:
-		hint_string = ",".join( _animation_names )
+	if animation_names:
+		hint_string = ",".join( animation_names )
 		property_usage = PROPERTY_USAGE_DEFAULT
 
 	var properties = []
