@@ -52,4 +52,5 @@ func _configure():
 	if skeleton and atlas:
 		if not data: data = SpineSpriteDefinitionData.new()
 		data.configure( self, atlas )
+	emit_changed()
 

@@ -46,8 +46,6 @@ func add_specular_map( texture:Texture2D ):
 	configure()
 
 func configure():
-	if data: data.configure( self )
-
 	var use_canvas_texture = (normal_maps.size() > 0 or specular_maps.size() > 0)
 	if use_canvas_texture != using_canvas_texture: textures = []
 
@@ -71,6 +69,8 @@ func configure():
 			else:                    textures[i] = color_maps[i]
 
 	while textures.size() > limit: textures.pop_back()
+
+	if data: data.configure( self )
 
 	emit_changed()
 

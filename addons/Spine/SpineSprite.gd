@@ -299,7 +299,10 @@ func _handle_animation_event( type:SpineAnimationEvent.Type, track_entry_id:int,
 	animation_event.emit( e )
 
 func _on_definition_changed():
-	if data: data.reset()
+	if data:
+		data.reset()
+		if Engine.is_editor_hint() and default_animation != "" and is_ready():
+			set_animation( default_animation, true )
 
 func _configure_resources():
 	if definition or not Engine.is_editor_hint(): return
