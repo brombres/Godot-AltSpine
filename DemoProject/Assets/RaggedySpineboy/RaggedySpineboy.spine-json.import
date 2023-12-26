@@ -1,0 +1,14 @@
+[remap]
+
+importer="Spine.skeleton_importer"
+type="Resource"
+uid="uid://c5owt2g5btuw7"
+path="res://.godot/imported/RaggedySpineboy.spine-json-c1869aae95307b4606d1189ba677c22e.res"
+
+[deps]
+
+source_file="res://Assets/RaggedySpineboy/RaggedySpineboy.spine-json"
+dest_files=["res://.godot/imported/RaggedySpineboy.spine-json-c1869aae95307b4606d1189ba677c22e.res"]
+
+[params]
+

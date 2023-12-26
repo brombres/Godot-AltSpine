@@ -1,0 +1,14 @@
+[remap]
+
+importer="Spine.skeleton_importer"
+type="Resource"
+uid="uid://b2tmeoqdcscns"
+path="res://.godot/imported/Raptor.skel-814ca82fd011e5f100133b80fb10cc65.res"
+
+[deps]
+
+source_file="res://Assets/Raptor/Raptor.skel"
+dest_files=["res://.godot/imported/Raptor.skel-814ca82fd011e5f100133b80fb10cc65.res"]
+
+[params]
+

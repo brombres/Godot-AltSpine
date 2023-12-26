@@ -1,0 +1,14 @@
+[remap]
+
+importer="Spine.skeleton_importer"
+type="Resource"
+uid="uid://d3vto3fpivilw"
+path="res://.godot/imported/MixAndMatch.spine-json-b160c8b2f368e275dee9d68f49b26af1.res"
+
+[deps]
+
+source_file="res://Assets/MixAndMatch/MixAndMatch.spine-json"
+dest_files=["res://.godot/imported/MixAndMatch.spine-json-b160c8b2f368e275dee9d68f49b26af1.res"]
+
+[params]
+

@@ -1,0 +1,14 @@
+[remap]
+
+importer="Spine.atlas_importer"
+type="Resource"
+uid="uid://bmh3ktm2ctipd"
+path="res://.godot/imported/Raptor.atlas-810c5c99e5368ca91b08dca96202e8f0.res"
+
+[deps]
+
+source_file="res://Assets/Raptor/Raptor.atlas"
+dest_files=["res://.godot/imported/Raptor.atlas-810c5c99e5368ca91b08dca96202e8f0.res"]
+
+[params]
+

@@ -15,8 +15,8 @@ func _enter_tree():
 	add_import_plugin( skeleton_importer )
 
 	add_custom_type( "SpineSpriteDefinition", "Resource", preload("SpineSpriteDefinition.gd"), null )
-	add_custom_type( "SpineSprite",         "Node2D", preload("SpineSprite.gd"),         null )
-	add_custom_type( "SpineSpriteFragment", "Node2D", preload("SpineSpriteFragment.gd"), null )
+	add_custom_type( "SpineSprite",         "Node2D", preload("SpineSprite.gd"),         preload("Icons/SpineSprite.svg") )
+	add_custom_type( "SpineSpriteFragment", "Node2D", preload("SpineSpriteFragment.gd"), preload("Icons/SpineSprite.svg") )
 	add_custom_type( "SpineAnimationEvent", "RefCounted", preload("SpineAnimationEvent.gd"), null )
 	add_custom_type( "SpinePointAttachment", "RefCounted", preload("SpinePointAttachment.gd"), null )
 

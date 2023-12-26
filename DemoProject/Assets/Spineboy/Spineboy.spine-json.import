@@ -1,0 +1,14 @@
+[remap]
+
+importer="Spine.skeleton_importer"
+type="Resource"
+uid="uid://dqw38h2p22gyb"
+path="res://.godot/imported/Spineboy.spine-json-45b5d977182e6bba6dbf2e190279c2e1.res"
+
+[deps]
+
+source_file="res://Assets/Spineboy/Spineboy.spine-json"
+dest_files=["res://.godot/imported/Spineboy.spine-json-45b5d977182e6bba6dbf2e190279c2e1.res"]
+
+[params]
+

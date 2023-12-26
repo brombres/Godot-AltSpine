@@ -48,22 +48,22 @@ func _import( source_filepath:String, save_path:String, options:Dictionary, plat
 					break
 
 			# Optional normal maps
-			png_filepath = "n%s.png" % basename
+			png_filepath = "n_%s.png" % basename
 			if FileAccess.file_exists(png_filepath):
 				resource.add_normal_map( load(png_filepath) )
 				for i in range(2,100):
-					png_filepath = "n%s_%d.png" % [basename,i]
+					png_filepath = "n_%s_%d.png" % [basename,i]
 					if FileAccess.file_exists(png_filepath):
 						resource.add_normal_map( load(png_filepath) )
 					else:
 						break
 
 			# Optional specular maps
-			png_filepath = "s%s.png" % basename
+			png_filepath = "s_%s.png" % basename
 			if FileAccess.file_exists(png_filepath):
 				resource.add_specular_map( load(png_filepath) )
 				for i in range(2,100):
-					png_filepath = "s%s_%d.png" % [basename,i]
+					png_filepath = "s_%s_%d.png" % [basename,i]
 					if FileAccess.file_exists(png_filepath):
 						resource.add_specular_map( load(png_filepath) )
 					else:
