@@ -25,8 +25,8 @@ func _init( type:Type, track_entry_id:int, animation_name:String, track_index:in
 	self.user_event_name = user_event_name
 
 func _to_string()->String:
-	if not user_event_name: return "%s[%d] %s (%d)" % [animation_name,track_index,type_name(),track_entry_id]
-	return "%s[%d] %s:%s (%d)" % [animation_name,track_index,type_name(),user_event_name,track_entry_id]
+	if not user_event_name: return "%s[%d] %s" % [animation_name,track_index,type_name()]
+	return "%s[%d] %s:%s" % [animation_name,track_index,type_name(),user_event_name]
 
 func type_name()->String:
 	match type:

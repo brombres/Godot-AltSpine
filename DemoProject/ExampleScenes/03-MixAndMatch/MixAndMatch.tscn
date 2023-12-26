@@ -1,0 +1,23 @@
+[gd_scene load_steps=8 format=3 uid="uid://dsuw2eqirmjic"]
+
+[ext_resource type="Shader" path="res://addons/Spine/SpineScreenBlendShader.gdshader" id="1_rt02y"]
+[ext_resource type="Script" path="res://addons/Spine/SpineSprite.gd" id="2_qofok"]
+[ext_resource type="Resource" uid="uid://cmrw2ifdyiuyd" path="res://Assets/MixAndMatch/MixAndMatch.atlas" id="3_hbutr"]
+[ext_resource type="Script" path="res://addons/Spine/SpineSpriteDefinition.gd" id="4_hkrsv"]
+[ext_resource type="Resource" uid="uid://d3vto3fpivilw" path="res://Assets/MixAndMatch/MixAndMatch.spine-json" id="5_e7m7v"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_3n8dr"]
+shader = ExtResource("1_rt02y")
+
+[sub_resource type="Resource" id="Resource_7w0n0"]
+script = ExtResource("4_hkrsv")
+skeleton = ExtResource("5_e7m7v")
+atlas = ExtResource("3_hbutr")
+
+[node name="MixAndMatch" type="Node2D"]
+
+[node name="MixAndMatch" type="Node2D" parent="."]
+material = SubResource("ShaderMaterial_3n8dr")
+script = ExtResource("2_qofok")
+definition = SubResource("Resource_7w0n0")
+default_animation = "aware"

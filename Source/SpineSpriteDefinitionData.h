@@ -34,6 +34,7 @@ class SpineSpriteDefinitionData : public RefCounted
     Variant spine_sprite_definition;
     spine::SkeletonData* skeleton_data = nullptr;
     spine::AnimationStateData* animation_state_data = nullptr;
+    bool error = false;
 
 		// CONSTRUCTOR METHODS
 		SpineSpriteDefinitionData();

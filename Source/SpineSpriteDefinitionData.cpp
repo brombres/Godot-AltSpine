@@ -33,6 +33,8 @@ void SpineSpriteDefinitionData::collect_animation_names( Variant array )
 
 bool SpineSpriteDefinitionData::configure( Variant spine_sprite_definition, Variant gd_atlas )
 {
+  if (error) return false;
+
   reset();
 
   this->spine_sprite_definition = spine_sprite_definition;
@@ -74,16 +76,18 @@ bool SpineSpriteDefinitionData::configure( Variant spine_sprite_definition, Vari
     if (!skeleton_data)
     {
       UtilityFunctions::print( "Error loading binary skeleton ", ((Object*)skeleton_resource)->get("resource_path"), ":", binary_loader.getError().buffer() );
+      error = true;
       return false;
     }
   }
   else
   {
     spine::SkeletonJson json_loader( atlas );
-    skeleton_data = json_loader.readSkeletonData( (const char*)bytes.get_string_from_utf8().ptr() );
+    skeleton_data = json_loader.readSkeletonData( bytes.get_string_from_utf8().utf8() );
     if (!skeleton_data)
     {
       UtilityFunctions::print( "Error loading JSON skeleton ", ((Object*)skeleton_resource)->get("resource_path"), ":", json_loader.getError().buffer() );
+      error = true;
       return false;
     }
   }
@@ -102,6 +106,8 @@ bool SpineSpriteDefinitionData::is_ready( Variant gd_atlas )
 
 void SpineSpriteDefinitionData::reset()
 {
+  error = false;
+
   if (skeleton_data)
   {
     delete skeleton_data;

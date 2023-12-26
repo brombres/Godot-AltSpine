@@ -8,7 +8,7 @@
 [ext_resource type="Resource" uid="uid://ct7tcqvaq215d" path="res://Assets/Spineboy/Spineboy.skel" id="6_n62ao"]
 [ext_resource type="AudioStream" uid="uid://dgxwyg1y72vxe" path="res://Assets/Footstep.ogg" id="7_vcc3c"]
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_xf1nj"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_t4spw"]
 shader = ExtResource("2_8d2av")
 
 [sub_resource type="Resource" id="Resource_hiiyk"]
@@ -20,12 +20,12 @@ atlas = ExtResource("4_e0dbe")
 script = ExtResource("1_26ig4")
 
 [node name="Spineboy" type="Node2D" parent="."]
-material = SubResource("ShaderMaterial_xf1nj")
+material = SubResource("ShaderMaterial_t4spw")
 position = Vector2(473, 787)
 scale = Vector2(0.575, 0.575)
 script = ExtResource("3_dsdsh")
 definition = SubResource("Resource_hiiyk")
-default_animation = "walk"
+default_animation = "(none)"
 
 [node name="Footstep" type="AudioStreamPlayer2D" parent="."]
 stream = ExtResource("7_vcc3c")
