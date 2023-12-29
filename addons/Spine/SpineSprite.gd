@@ -64,6 +64,10 @@ const screen_shader = preload("SpineScreenBlendShader.gdshader")
 ## Optional material to use for sprite fragments drawn in screen blending mode. If left empty then SpineSprite will use a default screen blending material.
 @export var screen_material:Material
 
+@export_group("Skin")
+
+@export var default_skin:Dictionary
+
 @export_group("Animation")
 
 ## The master animation time scale. Multiplies any 'time_scale' parameters set for individual animations.
@@ -113,6 +117,16 @@ func _ready():
 		if child is SpineSpriteFragment:
 			child.queue_free()
 
+
+	var skin_names = get_skin_names()
+	var skin = {}
+	for name in skin_names:
+		skin[name] = false
+	var cur_skin = _get_skin()
+	if cur_skin: skin[ data.get_skin_name(cur_skin) ] = true
+
+	default_skin = skin
+
 func _prepare_materials():
 	_materials = []
 
@@ -147,7 +161,7 @@ func _prepare_materials():
 
 ## Returns true if the named animation is currently playing on any track.
 ## If 'animation_name' is null, returns true if any animation is playing on any track.
-func is_playing( animation_name:Variant )->bool:
+func is_playing( animation_name:Variant=null )->bool:
 	if _active_animations:
 		if animation_name:
 			for i in _active_animations:
@@ -211,6 +225,16 @@ func get_point_attachment( slot_name:String, attachment_name:String )->Variant:
 	var attachment_id = data.get_point_attachment( slot_name, attachment_name )
 	if not attachment_id: return 0
 	return SpinePointAttachment.new( self, attachment_id, slot_name )
+
+## Returns an array of all available skin names.
+func get_skin_names():
+	var result:Array[String] = []
+	if not is_ready(): return result
+
+	var skins = data.get_skins()
+	for skin in skins:
+		result.push_back( data.get_skin_name(skin) )
+	return result
 
 ## Replaces any existing animation on the specified track.
 func set_animation( name:String, looping:bool=false, track_index:int=0, time_scale:float=1 ):
@@ -280,6 +304,10 @@ func _construct_fragment( texture_index:int, blend_mode:BlendMode ):
 
 	_mesh_builder.clear()
 	_mesh_builder.begin( Mesh.PRIMITIVE_TRIANGLES )
+
+func _get_skin()->int:
+	if not is_ready(): return 0
+	return data.get_skin()
 
 func _handle_animation_event( type:SpineAnimationEvent.Type, track_entry_id:int, animation_name:String, track_index:int,
 		user_event_name:Variant ):
@@ -416,5 +444,13 @@ func _get_property_list():
 		"hint":  PROPERTY_HINT_ENUM,
 		"hint_string": hint_string
 	})
+
+	#properties.append({
+	#	"name":  "default_animation",
+	#	"type":  TYPE_STRING,
+	#	"usage": property_usage,
+	#	"hint":  PROPERTY_HINT_ENUM,
+	#	"hint_string": hint_string
+	#})
 
 	return properties

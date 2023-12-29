@@ -43,7 +43,7 @@ int64_t SpineSpriteData::add_animation( int track_index, String name, bool loopi
 {
   if ( !animation_state ) return 0;
 
-  spine::TrackEntry* entry = animation_state->addAnimation( track_index, name.utf8().get_data(), looping, delay );
+  spine::TrackEntry* entry = animation_state->addAnimation( track_index, (const char*)name.utf8(), looping, delay );
 
   if (time_scale < 0)
   {
@@ -206,10 +206,16 @@ void SpineSpriteData::draw( SurfaceTool* mesh_builder, Variant on_draw_callback 
   }
 }
 
+int64_t SpineSpriteData::get_skin()
+{
+  if ( !skeleton ) return 0;
+  return (int64_t)(intptr_t)skeleton->getSkin();
+}
+
 int64_t SpineSpriteData::get_point_attachment( String slot_name, String attachment_name )
 {
   if ( !skeleton ) return 0;
-  spine::Attachment* attachment = skeleton->getAttachment( slot_name.utf8().get_data(), attachment_name.utf8().get_data() );
+  spine::Attachment* attachment = skeleton->getAttachment( (const char*)slot_name.utf8(), (const char*)attachment_name.utf8() );
   if (attachment && attachment->getRTTI().isExactly(spine::PointAttachment::rtti))
   {
     return (int64_t)(intptr_t)attachment;
@@ -239,7 +245,7 @@ Vector2 SpineSpriteData::get_point_attachment_position( int64_t attachment_point
   spine::PointAttachment* attachment = (spine::PointAttachment*)(int64_t)attachment_pointer;
   if ( !attachment ) return Vector2(0,0);
 
-  spine::Slot* slot = skeleton->findSlot( slot_name.utf8().get_data() );
+  spine::Slot* slot = skeleton->findSlot( (const char*)slot_name.utf8() );
   if ( !slot ) return Vector2(0,0);
 
   float x, y;
@@ -252,10 +258,33 @@ float SpineSpriteData::get_point_attachment_rotation( int64_t attachment_pointer
   spine::PointAttachment* attachment = (spine::PointAttachment*)(int64_t)attachment_pointer;
   if ( !attachment ) return 0;
 
-  spine::Slot* slot = skeleton->findSlot( slot_name.utf8().get_data() );
+  spine::Slot* slot = skeleton->findSlot( (const char*)slot_name.utf8() );
   if ( !slot ) return 0;
 
   return attachment->computeWorldRotation( slot->getBone() ) * acos(-1.0) / -180.0;  // DEG to RAD, negated
+}
+
+String SpineSpriteData::get_skin_name( int64_t skin_pointer )
+{
+  if ( !skin_pointer ) return "null";
+  spine::String name = ((spine::Skin*)(intptr_t)skin_pointer)->getName();
+  return (const char*) name.buffer();
+}
+
+Array SpineSpriteData::get_skins()
+{
+  Array result;
+  if ( !skeleton ) return result;
+  spine::SkeletonData* skeleton_data = skeleton->getData();
+  if ( !skeleton_data ) return result;
+
+  spine::Vector<spine::Skin*> skins = skeleton_data->getSkins();
+  for (int i=0; i<skins.size(); ++i)
+  {
+    result.push_back( (int64_t)(intptr_t)skins[i] );
+  }
+
+  return result;
 }
 
 float SpineSpriteData::get_time_scale()
@@ -301,7 +330,7 @@ int64_t SpineSpriteData::set_animation( int track_index, String name, bool loopi
 {
   if ( !animation_state ) return 0;
 
-  spine::TrackEntry* entry = animation_state->setAnimation( track_index, name.utf8().get_data(), looping );
+  spine::TrackEntry* entry = animation_state->setAnimation( track_index, (const char*)name.utf8(), looping );
 
   if (time_scale < 0)
   {
@@ -318,7 +347,7 @@ void SpineSpriteData::set_attachment( String slot_name, Variant attachment_name 
   if (skeleton)
   {
     if ( !attachment_name ) attachment_name = "";
-    skeleton->setAttachment( slot_name.utf8().get_data(), String(attachment_name).utf8().get_data() );
+    skeleton->setAttachment( (const char*)slot_name.utf8(), (const char*)String(attachment_name).utf8() );
   }
 }
 
@@ -351,8 +380,9 @@ void SpineSpriteData::set_skin( Variant name )
 {
   if (skeleton)
   {
-    if (name) skeleton->setSkin( String(name).utf8().get_data() );
-    else      skeleton->setSkin( nullptr );
+    spine::Skin* skin = nullptr;
+    skin = skeleton->getData()->findSkin( (const char*)String(name).utf8() );
+    skeleton->setSkin( skin );
   }
 }
 
@@ -376,6 +406,7 @@ void SpineSpriteData::_bind_methods()
 	ClassDB::bind_method( D_METHOD("clear_tracks"),                           &SpineSpriteData::clear_tracks );
 	ClassDB::bind_method( D_METHOD("configure","spine_sprite"),	              &SpineSpriteData::configure );
 	ClassDB::bind_method( D_METHOD("draw","mesh_builder","on_draw_callback"), &SpineSpriteData::draw );
+	ClassDB::bind_method( D_METHOD("get_skin"),                               &SpineSpriteData::get_skin );
 	ClassDB::bind_method( D_METHOD("get_point_attachment","slot_name","attachment_name"), &SpineSpriteData::get_point_attachment );
 	ClassDB::bind_method( D_METHOD("get_point_attachment_local_position","attachment_pointer"),
                         &SpineSpriteData::get_point_attachment_local_position );
@@ -385,6 +416,8 @@ void SpineSpriteData::_bind_methods()
                         &SpineSpriteData::get_point_attachment_position );
 	ClassDB::bind_method( D_METHOD("get_point_attachment_rotation","attachment_pointer","slot_name"),
                         &SpineSpriteData::get_point_attachment_rotation );
+	ClassDB::bind_method( D_METHOD("get_skin_name"),                            &SpineSpriteData::get_skin_name ),
+	ClassDB::bind_method( D_METHOD("get_skins"),                                &SpineSpriteData::get_skins );
 	ClassDB::bind_method( D_METHOD("get_time_scale"),                           &SpineSpriteData::get_time_scale );
 	ClassDB::bind_method( D_METHOD("is_ready"),	                                &SpineSpriteData::is_ready );
 	ClassDB::bind_method( D_METHOD("reset"),                                    &SpineSpriteData::reset );

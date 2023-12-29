@@ -1,15 +1,15 @@
 [gd_scene load_steps=8 format=3 uid="uid://dsuw2eqirmjic"]
 
 [ext_resource type="Shader" path="res://addons/Spine/SpineScreenBlendShader.gdshader" id="1_rt02y"]
-[ext_resource type="Script" path="res://addons/Spine/SpineSprite.gd" id="2_qofok"]
+[ext_resource type="Script" path="res://ExampleScenes/03-MixAndMatch/MixAndMatch.gd" id="2_byh7t"]
 [ext_resource type="Resource" uid="uid://cmrw2ifdyiuyd" path="res://Assets/MixAndMatch/MixAndMatch.atlas" id="3_hbutr"]
 [ext_resource type="Script" path="res://addons/Spine/SpineSpriteDefinition.gd" id="4_hkrsv"]
 [ext_resource type="Resource" uid="uid://d3vto3fpivilw" path="res://Assets/MixAndMatch/MixAndMatch.spine-json" id="5_e7m7v"]
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_3n8dr"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_ureuj"]
 shader = ExtResource("1_rt02y")
 
-[sub_resource type="Resource" id="Resource_7w0n0"]
+[sub_resource type="Resource" id="Resource_hgiqa"]
 script = ExtResource("4_hkrsv")
 skeleton = ExtResource("5_e7m7v")
 atlas = ExtResource("3_hbutr")
@@ -17,7 +17,45 @@ atlas = ExtResource("3_hbutr")
 [node name="MixAndMatch" type="Node2D"]
 
 [node name="MixAndMatch" type="Node2D" parent="."]
-material = SubResource("ShaderMaterial_3n8dr")
-script = ExtResource("2_qofok")
-definition = SubResource("Resource_7w0n0")
-default_animation = "aware"
+material = SubResource("ShaderMaterial_ureuj")
+position = Vector2(432, 480)
+scale = Vector2(0.442, 0.442)
+script = ExtResource("2_byh7t")
+definition = SubResource("Resource_hgiqa")
+default_skin = {
+"accessories/backpack": false,
+"accessories/bag": false,
+"accessories/cape-blue": false,
+"accessories/cape-red": false,
+"accessories/hat-pointy-blue-yellow": false,
+"accessories/hat-red-yellow": false,
+"accessories/scarf": false,
+"clothes/dress-blue": false,
+"clothes/dress-green": false,
+"clothes/hoodie-blue-and-scarf": false,
+"clothes/hoodie-orange": false,
+"default": false,
+"eyelids/girly": false,
+"eyelids/semiclosed": false,
+"eyes/eyes-blue": false,
+"eyes/green": false,
+"eyes/violet": false,
+"eyes/yellow": false,
+"full-skins/boy": false,
+"full-skins/girl": false,
+"full-skins/girl-blue-cape": false,
+"full-skins/girl-spring-dress": false,
+"hair/blue": false,
+"hair/brown": false,
+"hair/long-blue-with-scarf": false,
+"hair/pink": false,
+"hair/short-red": false,
+"legs/boots-pink": false,
+"legs/boots-red": false,
+"legs/pants-green": false,
+"legs/pants-jeans": false,
+"nose/long": false,
+"nose/short": false,
+"skin-base": false
+}
+default_animation = "(none)"
