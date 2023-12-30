@@ -53,6 +53,7 @@ class SpineSpriteData : public RefCounted
     Node*                  spine_sprite;
     spine::Skeleton*       skeleton = nullptr;
     spine::AnimationState* animation_state = nullptr;
+    spine::Skin*           custom_skin = nullptr;
     spine::Vector<float>   vertex_data;
     SpineSpriteAnimationEventListener listener;
 
@@ -84,7 +85,7 @@ class SpineSpriteData : public RefCounted
     void    set_point_attachment_local_rotation( int64_t attachment_pointer, float rotation );
     void    set_empty_animation( int track_index, float mix_duration );
     void    set_empty_animations( float mix_duration );
-    void    set_skin( Variant name );
+    void    set_skin( Variant new_skin );
     void    set_time_scale( float scale );
     void    update( double dt );
 };

@@ -313,6 +313,13 @@ bool SpineSpriteData::is_ready()
 
 void SpineSpriteData::reset()
 {
+  if (custom_skin)
+  {
+    delete custom_skin;
+    custom_skin = nullptr;
+    if (skeleton) skeleton->setSkin( custom_skin );
+  }
+
   if (animation_state)
   {
     delete animation_state;
@@ -376,13 +383,77 @@ void SpineSpriteData::set_empty_animations( float mix_duration )
   if (animation_state) animation_state->setEmptyAnimations( mix_duration );
 }
 
-void SpineSpriteData::set_skin( Variant name )
+// new_skin can be:
+//   - null to reset to default
+//   - String name
+//   - int Skin pointer
+//   - Array of skin name strings
+void SpineSpriteData::set_skin( Variant new_skin )
 {
   if (skeleton)
   {
+    if (custom_skin)
+    {
+      delete custom_skin;
+      custom_skin = nullptr;
+      skeleton->setSkin( custom_skin );
+    }
+
     spine::Skin* skin = nullptr;
-    skin = skeleton->getData()->findSkin( (const char*)String(name).utf8() );
+    spine::SkeletonData* skeleton_data = skeleton->getData();
+
+    switch (new_skin.get_type())
+    {
+      case Variant::Type::STRING:
+      {
+        skin = skeleton_data->findSkin( (const char*)String(new_skin).utf8() );
+        break;
+      }
+      case Variant::Type::INT:
+      {
+        skin = (spine::Skin*)(intptr_t)(int64_t)new_skin;
+        break;
+      }
+      case Variant::Type::ARRAY:
+      {
+        custom_skin = new spine::Skin( "godot-custom-skin" );
+        Array array = (Array) new_skin;
+        for (int i=0; i<array.size(); ++i)
+        {
+          Variant element = array[i];
+          spine::Skin* skin_element = nullptr;
+          switch (element.get_type())
+          {
+            case Variant::Type::STRING:
+            {
+              skin_element = skeleton_data->findSkin( (const char*)String(element).utf8() );
+              break;
+            }
+            case Variant::Type::INT:
+            {
+              skin_element = (spine::Skin*)(intptr_t)(int64_t)element;
+              break;
+            }
+            default:
+            {
+            }
+          }
+
+          if (skin_element)
+          {
+            custom_skin->addSkin( skin_element );
+          }
+        }
+        skin = custom_skin;
+        break;
+      }
+      default:
+      {
+      }
+    }
+
     skeleton->setSkin( skin );
+    skeleton->setSlotsToSetupPose();
   }
 }
 
@@ -429,7 +500,7 @@ void SpineSpriteData::_bind_methods()
                         &SpineSpriteData::set_point_attachment_local_rotation );
 	ClassDB::bind_method( D_METHOD("set_empty_animation","track_index","mix_duration"), &SpineSpriteData::set_empty_animation );
 	ClassDB::bind_method( D_METHOD("set_empty_animations","mix_duration"),    &SpineSpriteData::set_empty_animations );
-	ClassDB::bind_method( D_METHOD("set_skin","name"),                        &SpineSpriteData::set_skin );
+	ClassDB::bind_method( D_METHOD("set_skin","new_skin"),                    &SpineSpriteData::set_skin );
 	ClassDB::bind_method( D_METHOD("set_time_scale","scale"),                 &SpineSpriteData::set_time_scale );
 	ClassDB::bind_method( D_METHOD("update","dt"),	                          &SpineSpriteData::update );
 }

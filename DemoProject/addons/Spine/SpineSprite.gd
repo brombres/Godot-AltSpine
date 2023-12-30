@@ -66,7 +66,14 @@ const screen_shader = preload("SpineScreenBlendShader.gdshader")
 
 @export_group("Skin")
 
-@export var default_skin:Dictionary
+@export var default_skin:Dictionary :
+	set(value):
+		default_skin = value
+		if not is_ready(): return
+		var skin = SpineSkin.new()
+		for name in default_skin:
+			if default_skin[name]: skin.add( name )
+		set_skin( skin )
 
 @export_group("Animation")
 
@@ -99,6 +106,7 @@ var _active_blend_mode := BlendMode.NORMAL
 
 var _materials:Array[Material] = []
 var _is_ready := false
+var _skin_names = null
 
 var _active_animations:Dictionary = {}
 
@@ -235,13 +243,17 @@ func get_point_attachment( slot_name:String, attachment_name:String )->Variant:
 	return SpinePointAttachment.new( self, attachment_id, slot_name )
 
 ## Returns an array of all available skin names.
-func get_skin_names():
+func get_skin_names()->Array[String]:
+	if _skin_names: return _skin_names
+
 	var result:Array[String] = []
 	if not is_ready(): return result
 
 	var skins = data.get_skins()
 	for skin in skins:
 		result.push_back( data.get_skin_name(skin) )
+
+	_skin_names = result
 	return result
 
 ## Replaces any existing animation on the specified track.
@@ -263,9 +275,10 @@ func set_empty_animations( mix_duration:float=0.0, tracks=null ):
 
 ## Sets the sprite to use the specified skin name. The skin must have already been
 ## defined in the Spine editor.
-func set_skin( name:Variant ):
-	## name - a string name or else 'null' to set the default skin.
-	if is_ready(): data.set_skin( name )
+func set_skin( new_skin:Variant ):
+	if is_ready():
+		if new_skin is SpineSkin: data.set_skin( new_skin.elements )
+		else:                     data.set_skin( new_skin )
 
 #-------------------------------------------------------------------------------
 
@@ -335,10 +348,7 @@ func _handle_animation_event( type:SpineAnimationEvent.Type, track_entry_id:int,
 	animation_event.emit( e )
 
 func _on_definition_changed():
-	if data:
-		data.reset()
-		if Engine.is_editor_hint() and default_animation != "" and is_ready():
-			set_animation( default_animation, true )
+	_reset()
 
 func _configure_resources():
 	if definition or not Engine.is_editor_hint(): return
@@ -453,12 +463,11 @@ func _get_property_list():
 		"hint_string": hint_string
 	})
 
-	#properties.append({
-	#	"name":  "default_animation",
-	#	"type":  TYPE_STRING,
-	#	"usage": property_usage,
-	#	"hint":  PROPERTY_HINT_ENUM,
-	#	"hint_string": hint_string
-	#})
-
 	return properties
+
+func _reset():
+	if data:
+		data.reset()
+		if Engine.is_editor_hint() and default_animation != "" and is_ready():
+			set_animation( default_animation, true )
+	_skin_names = null

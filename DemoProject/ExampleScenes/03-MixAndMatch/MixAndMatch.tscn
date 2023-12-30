@@ -6,7 +6,7 @@
 [ext_resource type="Script" path="res://addons/Spine/SpineSpriteDefinition.gd" id="4_hkrsv"]
 [ext_resource type="Resource" uid="uid://d3vto3fpivilw" path="res://Assets/MixAndMatch/MixAndMatch.spine-json" id="5_e7m7v"]
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_ureuj"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_5pflb"]
 shader = ExtResource("1_rt02y")
 
 [sub_resource type="Resource" id="Resource_hgiqa"]
@@ -17,7 +17,7 @@ atlas = ExtResource("3_hbutr")
 [node name="MixAndMatch" type="Node2D"]
 
 [node name="MixAndMatch" type="Node2D" parent="."]
-material = SubResource("ShaderMaterial_ureuj")
+material = SubResource("ShaderMaterial_5pflb")
 position = Vector2(432, 480)
 scale = Vector2(0.442, 0.442)
 script = ExtResource("2_byh7t")
@@ -42,7 +42,7 @@ default_skin = {
 "eyes/violet": false,
 "eyes/yellow": false,
 "full-skins/boy": false,
-"full-skins/girl": false,
+"full-skins/girl": true,
 "full-skins/girl-blue-cape": false,
 "full-skins/girl-spring-dress": false,
 "hair/blue": false,
@@ -58,4 +58,4 @@ default_skin = {
 "nose/short": false,
 "skin-base": false
 }
-default_animation = "(none)"
+default_animation = "dance"
