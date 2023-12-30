@@ -1,3 +1,36 @@
-[gd_scene format=3 uid="uid://cufir27jw53yg"]
+[gd_scene load_steps=10 format=3 uid="uid://cufir27jw53yg"]
+
+[ext_resource type="Script" path="res://ExampleScenes/05-MouseFollowing/MouseFollowing.gd" id="1_fs0ok"]
+[ext_resource type="Shader" path="res://addons/Spine/SpineScreenBlendShader.gdshader" id="1_nixxt"]
+[ext_resource type="Script" path="res://addons/Spine/SpineSprite.gd" id="2_12l4v"]
+[ext_resource type="Resource" uid="uid://dlvw0jkib36jp" path="res://Assets/Spineboy/Spineboy.atlas" id="3_gd284"]
+[ext_resource type="Script" path="res://addons/Spine/SpineSpriteDefinition.gd" id="4_pn7st"]
+[ext_resource type="Resource" uid="uid://brgi0wmbkmbeo" path="res://Assets/Spineboy/Spineboy.skel" id="5_tqt8j"]
+[ext_resource type="Script" path="res://ExampleScenes/05-MouseFollowing/SpineSpriteBone.gd" id="7_mqdkp"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_1fq27"]
+shader = ExtResource("1_nixxt")
+
+[sub_resource type="Resource" id="Resource_30yc3"]
+script = ExtResource("4_pn7st")
+skeleton = ExtResource("5_tqt8j")
+atlas = ExtResource("3_gd284")
 
 [node name="MouseFollowing" type="Node2D"]
+script = ExtResource("1_fs0ok")
+
+[node name="Spineboy" type="Node2D" parent="."]
+material = SubResource("ShaderMaterial_1fq27")
+position = Vector2(481, 457)
+scale = Vector2(0.5, 0.5)
+script = ExtResource("2_12l4v")
+definition = SubResource("Resource_30yc3")
+default_skin = {
+"default": false
+}
+default_animation = "aim"
+
+[node name="SpineSpriteBone" type="Node2D" parent="Spineboy"]
+script = ExtResource("7_mqdkp")
+bone = "crosshair"
+mode = "Drive"

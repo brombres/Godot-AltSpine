@@ -111,6 +111,7 @@ var _active_blend_mode := BlendMode.NORMAL
 var _materials:Array[Material] = []
 var _is_ready := false
 var _skin_names = null
+var _bone_names = null
 
 var _active_animations:Dictionary = {}
 
@@ -238,6 +239,20 @@ func clear_tracks( tracks=null ):
 				data.clear_track( track_index )
 		else:
 			data.clear_tracks()
+
+## Returns an array of all bone names.
+func get_bone_names()->Array[String]:
+	if _bone_names: return _bone_names
+
+	var result:Array[String] = []
+	if not is_ready(): return result
+
+	var bones = data.get_bones()
+	for bone in bones:
+		result.push_back( data.get_bone_name(bone) )
+
+	_bone_names = result
+	return result
 
 ## Returns a [SpinePointAttachment] or 'null'.
 func get_point_attachment( slot_name:String, attachment_name:String )->Variant:
@@ -475,3 +490,4 @@ func _reset():
 		if Engine.is_editor_hint() and default_animation != "" and is_ready():
 			set_animation( default_animation, true )
 	_skin_names = null
+	_bone_names = null
