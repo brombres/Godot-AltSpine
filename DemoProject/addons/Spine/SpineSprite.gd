@@ -26,8 +26,12 @@ enum BlendMode
 	SCREEN   = 3
 }
 
-const SpineSpriteDefinition = preload("SpineSpriteDefinition.gd")
-const screen_shader = preload("SpineScreenBlendShader.gdshader")
+const SpineSpriteDefinition = preload( "SpineSpriteDefinition.gd" )
+const SpineSpriteFragment = preload( "SpineSpriteFragment.gd" )
+const SpineAnimationEvent = preload( "SpineAnimationEvent.gd" )
+const SpineSkin = preload( "SpineSkin.gd" )
+const SpinePointAttachment = preload( "SpinePointAttachment.gd" )
+const screen_shader = preload( "SpineScreenBlendShader.gdshader" )
 
 ## A resource that contains references to a pair of [SpineSkeletonResource] and [SpineAtlasResource] resources.
 @export var definition:SpineSpriteDefinition :
@@ -97,7 +101,7 @@ var default_animation := "" :
 var animation_names = null
 
 ## Native sprite data that interfaces with the 'spine-cpp' library.
-var data:SpineSpriteData
+var data:Variant
 
 var _mesh_builder:SurfaceTool = SurfaceTool.new()
 var _fragments:Array[SpineSpriteFragment] = []
@@ -115,7 +119,7 @@ func _ready():
 	material.shader = screen_shader
 
 	_configure_resources()
-	data = SpineSpriteData.new()
+	data = ClassDB.instantiate( "SpineSpriteData" )
 	data.configure( self )
 
 	_prepare_materials()

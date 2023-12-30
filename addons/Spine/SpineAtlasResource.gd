@@ -31,7 +31,7 @@ var using_canvas_texture := false
 
 var _atlas_data_pointer:int # Internal use only.
 
-var data:SpineAtlasResourceData
+var data:Variant
 
 func add_color_map( texture:Texture2D ):
 	color_maps.push_back( texture )
@@ -76,6 +76,6 @@ func configure():
 
 func is_ready():
 	if not data:
-		data = SpineAtlasResourceData.new()
+		data = ClassDB.instantiate("SpineAtlasResourceData")
 		data.configure( self )
 	return data.is_ready()

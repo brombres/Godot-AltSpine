@@ -1,5 +1,4 @@
 @tool
-class_name SpineSpriteFragment
 extends Node2D
 
 var mesh:ArrayMesh

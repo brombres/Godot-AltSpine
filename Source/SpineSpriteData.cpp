@@ -206,10 +206,27 @@ void SpineSpriteData::draw( SurfaceTool* mesh_builder, Variant on_draw_callback 
   }
 }
 
-int64_t SpineSpriteData::get_skin()
+String SpineSpriteData::get_bone_name( int64_t bone_pointer )
 {
-  if ( !skeleton ) return 0;
-  return (int64_t)(intptr_t)skeleton->getSkin();
+  if ( !bone_pointer ) return "null";
+  spine::String name = ((spine::Bone*)(intptr_t)bone_pointer)->getData().getName();
+  return (const char*) name.buffer();
+}
+
+Array SpineSpriteData::get_bones()
+{
+  Array result;
+  if ( !skeleton ) return result;
+  spine::SkeletonData* skeleton_data = skeleton->getData();
+  if ( !skeleton_data ) return result;
+
+  spine::Vector<spine::Bone*> bones = skeleton->getBones();
+  for (int i=0; i<bones.size(); ++i)
+  {
+    result.push_back( (int64_t)(intptr_t)bones[i] );
+  }
+
+  return result;
 }
 
 int64_t SpineSpriteData::get_point_attachment( String slot_name, String attachment_name )
@@ -262,6 +279,12 @@ float SpineSpriteData::get_point_attachment_rotation( int64_t attachment_pointer
   if ( !slot ) return 0;
 
   return attachment->computeWorldRotation( slot->getBone() ) * acos(-1.0) / -180.0;  // DEG to RAD, negated
+}
+
+int64_t SpineSpriteData::get_skin()
+{
+  if ( !skeleton ) return 0;
+  return (int64_t)(intptr_t)skeleton->getSkin();
 }
 
 String SpineSpriteData::get_skin_name( int64_t skin_pointer )
@@ -477,7 +500,8 @@ void SpineSpriteData::_bind_methods()
 	ClassDB::bind_method( D_METHOD("clear_tracks"),                           &SpineSpriteData::clear_tracks );
 	ClassDB::bind_method( D_METHOD("configure","spine_sprite"),	              &SpineSpriteData::configure );
 	ClassDB::bind_method( D_METHOD("draw","mesh_builder","on_draw_callback"), &SpineSpriteData::draw );
-	ClassDB::bind_method( D_METHOD("get_skin"),                               &SpineSpriteData::get_skin );
+	ClassDB::bind_method( D_METHOD("get_bone_name","bone_pointer"),           &SpineSpriteData::get_bone_name );
+	ClassDB::bind_method( D_METHOD("get_bones"),                              &SpineSpriteData::get_bones );
 	ClassDB::bind_method( D_METHOD("get_point_attachment","slot_name","attachment_name"), &SpineSpriteData::get_point_attachment );
 	ClassDB::bind_method( D_METHOD("get_point_attachment_local_position","attachment_pointer"),
                         &SpineSpriteData::get_point_attachment_local_position );
@@ -487,6 +511,7 @@ void SpineSpriteData::_bind_methods()
                         &SpineSpriteData::get_point_attachment_position );
 	ClassDB::bind_method( D_METHOD("get_point_attachment_rotation","attachment_pointer","slot_name"),
                         &SpineSpriteData::get_point_attachment_rotation );
+	ClassDB::bind_method( D_METHOD("get_skin"),                               &SpineSpriteData::get_skin );
 	ClassDB::bind_method( D_METHOD("get_skin_name"),                            &SpineSpriteData::get_skin_name ),
 	ClassDB::bind_method( D_METHOD("get_skins"),                                &SpineSpriteData::get_skins );
 	ClassDB::bind_method( D_METHOD("get_time_scale"),                           &SpineSpriteData::get_time_scale );

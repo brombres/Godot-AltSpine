@@ -19,7 +19,7 @@ const SpineAtlasResource = preload("SpineAtlasResource.gd")
 			_configure()
 			emit_changed()
 
-var data:SpineSpriteDefinitionData
+var data:Variant
 var _data_pointer:int
 
 func get_animation_names()->Array[String]:
@@ -50,7 +50,7 @@ func _configure():
 	if atlas and not atlas.changed.is_connected( _configure ):
 		atlas.changed.connect( _configure )
 	if skeleton and atlas:
-		if not data: data = SpineSpriteDefinitionData.new()
+		if not data: data = ClassDB.instantiate("SpineSpriteDefinitionData")
 		data.configure( self, atlas )
 	emit_changed()
 

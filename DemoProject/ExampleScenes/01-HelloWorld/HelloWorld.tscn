@@ -2,11 +2,11 @@
 
 [ext_resource type="Shader" path="res://addons/Spine/SpineScreenBlendShader.gdshader" id="1_w538v"]
 [ext_resource type="Script" path="res://ExampleScenes/01-HelloWorld/Spineboy.gd" id="2_krvl1"]
-[ext_resource type="Resource" uid="uid://b8hf7n4wx46dv" path="res://Assets/Spineboy/Spineboy.atlas" id="3_siljd"]
+[ext_resource type="Resource" uid="uid://dlvw0jkib36jp" path="res://Assets/Spineboy/Spineboy.atlas" id="3_siljd"]
 [ext_resource type="Script" path="res://addons/Spine/SpineSpriteDefinition.gd" id="4_khau5"]
-[ext_resource type="Resource" uid="uid://ct7tcqvaq215d" path="res://Assets/Spineboy/Spineboy.skel" id="5_xl0dn"]
+[ext_resource type="Resource" uid="uid://brgi0wmbkmbeo" path="res://Assets/Spineboy/Spineboy.skel" id="5_xl0dn"]
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_62ube"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_mihem"]
 shader = ExtResource("1_w538v")
 
 [sub_resource type="Resource" id="Resource_twpp8"]
@@ -17,7 +17,7 @@ atlas = ExtResource("3_siljd")
 [node name="HelloWorld" type="Node2D"]
 
 [node name="Spineboy" type="Node2D" parent="."]
-material = SubResource("ShaderMaterial_62ube")
+material = SubResource("ShaderMaterial_mihem")
 position = Vector2(505, 466)
 scale = Vector2(0.467, 0.467)
 script = ExtResource("2_krvl1")

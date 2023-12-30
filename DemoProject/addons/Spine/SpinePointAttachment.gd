@@ -1,5 +1,7 @@
 class_name SpinePointAttachment extends RefCounted
 
+const SpineSprite = preload( "SpineSprite.gd" )
+
 var spine_sprite:SpineSprite
 var point_attachment_id:int
 var slot_name:String
