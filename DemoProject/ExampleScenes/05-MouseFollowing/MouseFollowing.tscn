@@ -8,7 +8,7 @@
 [ext_resource type="Resource" uid="uid://brgi0wmbkmbeo" path="res://Assets/Spineboy/Spineboy.skel" id="5_tqt8j"]
 [ext_resource type="Script" path="res://addons/Spine/SpineSpriteBone.gd" id="7_mqdkp"]
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_616qr"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_7jmgi"]
 shader = ExtResource("1_nixxt")
 
 [sub_resource type="Resource" id="Resource_30yc3"]
@@ -20,7 +20,7 @@ atlas = ExtResource("3_gd284")
 script = ExtResource("1_fs0ok")
 
 [node name="Spineboy" type="Node2D" parent="."]
-material = SubResource("ShaderMaterial_616qr")
+material = SubResource("ShaderMaterial_7jmgi")
 position = Vector2(481, 457)
 scale = Vector2(0.5, 0.5)
 script = ExtResource("2_12l4v")
@@ -31,7 +31,7 @@ default_skin = {
 default_animation = "aim"
 
 [node name="CrosshairBone" type="Node2D" parent="Spineboy"]
-position = Vector2(670, -598)
+position = Vector2(692, -614)
 rotation = -0.000833303
 script = ExtResource("7_mqdkp")
 bone = "crosshair"

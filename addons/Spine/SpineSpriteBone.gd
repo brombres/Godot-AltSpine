@@ -26,15 +26,17 @@ func is_ready()->bool:
 
 func _enter_tree():
 	var parent = get_parent()
-	if parent is SpineSprite and not parent.changed.is_connected( _on_sprite_changed ):
-		parent.changed.connect( _on_sprite_changed )
+	if parent is SpineSprite:
+		if not parent.changed.is_connected( _on_sprite_changed ): parent.changed.connect( _on_sprite_changed )
+		if not parent.updated.is_connected( _on_sprite_updated ): parent.updated.connect( _on_sprite_updated )
 	_bone_pointer = 0
 	set_notify_transform( true )
 
 func _exit_tree():
 	var parent = get_parent()
-	if parent is SpineSprite and parent.changed.is_connected( _on_sprite_changed ):
-		parent.changed.disconnect( _on_sprite_changed )
+	if parent is SpineSprite:
+		if parent.changed.is_connected( _on_sprite_changed ): parent.changed.disconnect( _on_sprite_changed )
+		if parent.updated.is_connected( _on_sprite_changed ): parent.updated.disconnect( _on_sprite_updated )
 	_bone_pointer = 0
 	set_notify_transform( false )
 
@@ -78,7 +80,7 @@ func _get_property_list():
 func _on_sprite_changed():
 	_bone_pointer = 0
 
-func _process( _dt ):
+func _on_sprite_updated():
 	if is_ready():
 		var parent = get_parent()
 		if _drives:

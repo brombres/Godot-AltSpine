@@ -269,6 +269,8 @@ func get_bone_names()->Array[String]:
 	for bone in bones:
 		result.push_back( data.get_bone_name(bone) )
 
+	result.sort_custom( func(a, b): return a.naturalnocasecmp_to(b) < 0 )
+
 	_bone_names = result
 	return result
 
@@ -289,6 +291,8 @@ func get_skin_names()->Array[String]:
 	var skins = data.get_skins()
 	for skin in skins:
 		result.push_back( data.get_skin_name(skin) )
+
+	result.sort_custom( func(a, b): return a.naturalnocasecmp_to(b) < 0 )
 
 	_skin_names = result
 	return result

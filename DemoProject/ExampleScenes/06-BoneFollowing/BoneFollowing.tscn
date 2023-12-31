@@ -1,0 +1,43 @@
+[gd_scene load_steps=11 format=3 uid="uid://bx371omat28a3"]
+
+[ext_resource type="Script" path="res://ExampleScenes/06-BoneFollowing/BoneFollowing.gd" id="1_2pfyv"]
+[ext_resource type="Shader" path="res://addons/Spine/SpineScreenBlendShader.gdshader" id="1_g60wx"]
+[ext_resource type="Script" path="res://addons/Spine/SpineSprite.gd" id="2_rykd6"]
+[ext_resource type="Resource" uid="uid://dlvw0jkib36jp" path="res://Assets/Spineboy/Spineboy.atlas" id="3_ww7cu"]
+[ext_resource type="Script" path="res://addons/Spine/SpineSpriteDefinition.gd" id="4_poiws"]
+[ext_resource type="Resource" uid="uid://brgi0wmbkmbeo" path="res://Assets/Spineboy/Spineboy.skel" id="5_aoop5"]
+[ext_resource type="Script" path="res://addons/Spine/SpineSpriteBone.gd" id="6_30kw5"]
+[ext_resource type="Texture2D" uid="uid://dgll4jrderuh" path="res://icon.svg" id="7_yv78o"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_cys6t"]
+shader = ExtResource("1_g60wx")
+
+[sub_resource type="Resource" id="Resource_cx3sv"]
+script = ExtResource("4_poiws")
+skeleton = ExtResource("5_aoop5")
+atlas = ExtResource("3_ww7cu")
+
+[node name="BoneFollowing" type="Node2D"]
+script = ExtResource("1_2pfyv")
+
+[node name="Spineboy" type="Node2D" parent="."]
+material = SubResource("ShaderMaterial_cys6t")
+position = Vector2(478, 483)
+scale = Vector2(0.585, 0.585)
+script = ExtResource("2_rykd6")
+definition = SubResource("Resource_cx3sv")
+default_skin = {
+"default": false
+}
+default_animation = "walk"
+
+[node name="SpineSpriteBone" type="Node2D" parent="Spineboy"]
+position = Vector2(153.056, -113.623)
+rotation = 1.01229
+script = ExtResource("6_30kw5")
+bone = "gun-tip"
+mode = "Follow"
+
+[node name="Icon" type="Sprite2D" parent="Spineboy/SpineSpriteBone"]
+scale = Vector2(0.5, 0.5)
+texture = ExtResource("7_yv78o")
