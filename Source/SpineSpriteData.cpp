@@ -206,11 +206,31 @@ void SpineSpriteData::draw( SurfaceTool* mesh_builder, Variant on_draw_callback 
   }
 }
 
+int64_t SpineSpriteData::find_bone( String bone_name )
+{
+  if ( !skeleton ) return 0;
+  return (int64_t)(intptr_t)skeleton->findBone( (const char*)bone_name.utf8() );
+}
+
 String SpineSpriteData::get_bone_name( int64_t bone_pointer )
 {
   if ( !bone_pointer ) return "null";
   spine::String name = ((spine::Bone*)(intptr_t)bone_pointer)->getData().getName();
   return (const char*) name.buffer();
+}
+
+Vector2 SpineSpriteData::get_bone_position( int64_t bone_pointer )
+{
+  if ( !bone_pointer ) return Vector2( 0, 0 );
+  spine::Bone* bone = (spine::Bone*)(intptr_t)bone_pointer;
+  return Vector2( bone->getWorldX(), -bone->getWorldY() );
+}
+
+float SpineSpriteData::get_bone_rotation( int64_t bone_pointer )
+{
+  if ( !bone_pointer ) return 0;
+  spine::Bone* bone = (spine::Bone*)(intptr_t)bone_pointer;
+  return bone->localToWorldRotation( bone->getRotation() ) * -spine::MathUtil::Deg_Rad;
 }
 
 Array SpineSpriteData::get_bones()
@@ -254,7 +274,7 @@ float SpineSpriteData::get_point_attachment_local_rotation( int64_t attachment_p
 {
   spine::PointAttachment* attachment = (spine::PointAttachment*)(int64_t)attachment_pointer;
   if ( !attachment ) return 0;
-  return attachment->getRotation() * acos(-1.0) / -180.0;  // DEG to RAD
+  return attachment->getRotation() * -spine::MathUtil::Deg_Rad;
 }
 
 Vector2 SpineSpriteData::get_point_attachment_position( int64_t attachment_pointer, String slot_name )
@@ -278,7 +298,7 @@ float SpineSpriteData::get_point_attachment_rotation( int64_t attachment_pointer
   spine::Slot* slot = skeleton->findSlot( (const char*)slot_name.utf8() );
   if ( !slot ) return 0;
 
-  return attachment->computeWorldRotation( slot->getBone() ) * acos(-1.0) / -180.0;  // DEG to RAD, negated
+  return attachment->computeWorldRotation( slot->getBone() ) * -spine::MathUtil::Deg_Rad;
 }
 
 int64_t SpineSpriteData::get_skin()
@@ -381,6 +401,25 @@ void SpineSpriteData::set_attachment( String slot_name, Variant attachment_name 
   }
 }
 
+void SpineSpriteData::set_bone_position( int64_t bone_pointer, Vector2 position )
+{
+  if ( !bone_pointer ) return;
+  spine::Bone* bone = (spine::Bone*)(intptr_t)bone_pointer;
+
+  // I don't understand how to use setWorldX/worldToLocal() etc., but this works. --Abe
+  float x =  position.x + (bone->getX() - bone->getWorldX());
+  float y = -position.y + (bone->getY() - bone->getWorldY());
+  bone->setX( x );
+  bone->setY( y );
+}
+
+void SpineSpriteData::set_bone_rotation( int64_t bone_pointer, float rotation )
+{
+  if ( !bone_pointer ) return;
+  spine::Bone* bone = (spine::Bone*)(intptr_t)bone_pointer;
+  bone->setRotation( bone->worldToLocalRotation(rotation * -spine::MathUtil::Rad_Deg) );
+}
+
 void SpineSpriteData::set_point_attachment_local_position( int64_t attachment_pointer, Vector2 position )
 {
   spine::PointAttachment* attachment = (spine::PointAttachment*)(int64_t)attachment_pointer;
@@ -393,7 +432,7 @@ void SpineSpriteData::set_point_attachment_local_rotation( int64_t attachment_po
 {
   spine::PointAttachment* attachment = (spine::PointAttachment*)(int64_t)attachment_pointer;
   if ( !attachment ) return;
-  attachment->setRotation( rotation * -180.0 / acos(-1.0) );   // RAD to DEG
+  attachment->setRotation( rotation * -spine::MathUtil::Rad_Deg );
 }
 
 void SpineSpriteData::set_empty_animation( int track_index, float mix_duration )
@@ -500,7 +539,10 @@ void SpineSpriteData::_bind_methods()
 	ClassDB::bind_method( D_METHOD("clear_tracks"),                           &SpineSpriteData::clear_tracks );
 	ClassDB::bind_method( D_METHOD("configure","spine_sprite"),	              &SpineSpriteData::configure );
 	ClassDB::bind_method( D_METHOD("draw","mesh_builder","on_draw_callback"), &SpineSpriteData::draw );
+	ClassDB::bind_method( D_METHOD("find_bone","bone_name"),                  &SpineSpriteData::find_bone );
 	ClassDB::bind_method( D_METHOD("get_bone_name","bone_pointer"),           &SpineSpriteData::get_bone_name );
+	ClassDB::bind_method( D_METHOD("get_bone_position","bone_pointer"),       &SpineSpriteData::get_bone_position );
+	ClassDB::bind_method( D_METHOD("get_bone_rotation","bone_pointer"),       &SpineSpriteData::get_bone_rotation );
 	ClassDB::bind_method( D_METHOD("get_bones"),                              &SpineSpriteData::get_bones );
 	ClassDB::bind_method( D_METHOD("get_point_attachment","slot_name","attachment_name"), &SpineSpriteData::get_point_attachment );
 	ClassDB::bind_method( D_METHOD("get_point_attachment_local_position","attachment_pointer"),
@@ -519,6 +561,8 @@ void SpineSpriteData::_bind_methods()
 	ClassDB::bind_method( D_METHOD("reset"),                                    &SpineSpriteData::reset );
 	ClassDB::bind_method( D_METHOD("set_animation","track_index","name","looping","time_scale"), &SpineSpriteData::set_animation );
 	ClassDB::bind_method( D_METHOD("set_attachment","slot_name","attachment_name"), &SpineSpriteData::set_attachment );
+	ClassDB::bind_method( D_METHOD("set_bone_position","position"), &SpineSpriteData::set_bone_position );
+	ClassDB::bind_method( D_METHOD("set_bone_rotation","rotation"), &SpineSpriteData::set_bone_rotation );
 	ClassDB::bind_method( D_METHOD("set_point_attachment_local_position","position"),
                         &SpineSpriteData::set_point_attachment_local_position );
 	ClassDB::bind_method( D_METHOD("set_point_attachment_local_rotation","rotation"),

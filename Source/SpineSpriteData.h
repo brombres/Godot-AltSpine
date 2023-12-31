@@ -68,7 +68,10 @@ class SpineSpriteData : public RefCounted
     void    clear_tracks();
     void    configure( Node* spine_sprite );
     void    draw( SurfaceTool* mesh_builder, Variant on_draw_callback );
+    int64_t find_bone( String bone_name );
     String  get_bone_name( int64_t bone_pointer );
+    Vector2 get_bone_position( int64_t bone_pointer );
+    float   get_bone_rotation( int64_t bone_pointer );
     Array   get_bones();
     int64_t get_point_attachment( String slot_name, String attachment_name );
     Vector2 get_point_attachment_local_position( int64_t attachment_pointer );
@@ -83,6 +86,8 @@ class SpineSpriteData : public RefCounted
     void    reset();
     int64_t set_animation( int track_index, String name, bool looping, float time_scale );
     void    set_attachment( String slot_name, Variant attachment_name );
+    void    set_bone_position( int64_t bone_pointer, Vector2 position );
+    void    set_bone_rotation( int64_t bone_pointer, float rotation );
     void    set_point_attachment_local_position( int64_t attachment_pointer, Vector2 position );
     void    set_point_attachment_local_rotation( int64_t attachment_pointer, float rotation );
     void    set_empty_animation( int track_index, float mix_duration );

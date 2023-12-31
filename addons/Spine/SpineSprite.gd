@@ -13,6 +13,9 @@ extends Node2D
 ## Emitted with a SpineAnimationEvent object that describes an animation state change.
 signal animation_event( e:SpineAnimationEvent )
 
+## Emitted when the definition of this SpineSprite has changed
+signal changed
+
 ## Emitted when the Spine skeleton has been updated in [method _process]. Useful for precisely synchronizing
 ## other object positions to point attachments.
 signal updated
@@ -240,6 +243,21 @@ func clear_tracks( tracks=null ):
 		else:
 			data.clear_tracks()
 
+## Returns the integer pointer to the bone with the specified name or 0 if not found.
+func find_bone( bone_name:String )->int:
+	if is_ready(): return data.find_bone( bone_name )
+	else:          return 0
+
+## Returns the position of the specified bone.
+func get_bone_position( bone_pointer:int )->Vector2:
+	if is_ready(): return data.get_bone_position( bone_pointer )
+	else:          return Vector2(0,0)
+
+## Returns the rotation of the specified bone.
+func get_bone_rotation( bone_pointer:int )->float:
+	if is_ready(): return data.get_bone_rotation( bone_pointer )
+	else:          return 0
+
 ## Returns an array of all bone names.
 func get_bone_names()->Array[String]:
 	if _bone_names: return _bone_names
@@ -280,6 +298,14 @@ func set_animation( name:String, looping:bool=false, track_index:int=0, time_sca
 	if is_ready():
 		if name == "(none)":           data.set_empty_animation( track_index, 0.5 )
 		elif name in animation_names: data.set_animation( track_index, name, looping, time_scale )
+
+## Sets the position of the specified bone.
+func set_bone_position( bone_pointer:int, pos:Vector2 ):
+	if is_ready(): data.set_bone_position( bone_pointer, pos )
+
+## Sets the rotation of the specified bone.
+func set_bone_rotation( bone_pointer:int, radians:float ):
+	if is_ready(): data.set_bone_rotation( bone_pointer, radians )
 
 ## Sets empty animations on all active tracks, interrupting current animations and
 ## returning the sprite to its starting pose.
@@ -491,3 +517,4 @@ func _reset():
 			set_animation( default_animation, true )
 	_skin_names = null
 	_bone_names = null
+	changed.emit()
