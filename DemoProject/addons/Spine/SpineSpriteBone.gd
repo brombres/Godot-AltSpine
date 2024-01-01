@@ -30,7 +30,7 @@ func _enter_tree():
 		if not parent.changed.is_connected( _on_sprite_changed ): parent.changed.connect( _on_sprite_changed )
 		if not parent.updated.is_connected( _on_sprite_updated ): parent.updated.connect( _on_sprite_updated )
 	_bone_pointer = 0
-	set_notify_transform( true )
+	#set_notify_transform( true )
 
 func _exit_tree():
 	var parent = get_parent()
@@ -38,7 +38,7 @@ func _exit_tree():
 		if parent.changed.is_connected( _on_sprite_changed ): parent.changed.disconnect( _on_sprite_changed )
 		if parent.updated.is_connected( _on_sprite_changed ): parent.updated.disconnect( _on_sprite_updated )
 	_bone_pointer = 0
-	set_notify_transform( false )
+	#set_notify_transform( false )
 
 func _get_bone_names()->Array[String]:
 	var parent = get_parent()

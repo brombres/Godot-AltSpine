@@ -366,7 +366,7 @@ Array SpineSpriteData::get_slots()
   Array result;
   if ( !skeleton ) return result;
 
-  spine::Vector<spine::Slot*> slots = skeleton->getSlots();
+  spine::Vector<spine::Slot*> slots = skeleton->getDrawOrder();
   for (int i=0; i<slots.size(); ++i)
   {
     result.push_back( (int64_t)(intptr_t)slots[i] );

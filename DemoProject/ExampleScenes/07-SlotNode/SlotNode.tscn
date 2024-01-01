@@ -9,7 +9,7 @@
 [ext_resource type="Script" path="res://ExampleScenes/07-SlotNode/SpineSpriteAttachment.gd" id="7_wccbm"]
 [ext_resource type="Texture2D" uid="uid://dgll4jrderuh" path="res://icon.svg" id="8_2efac"]
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_skc1s"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_b1ldj"]
 shader = ExtResource("1_cbfl2")
 
 [sub_resource type="Resource" id="Resource_tg60c"]
@@ -21,7 +21,7 @@ atlas = ExtResource("3_iy6e5")
 script = ExtResource("1_wrqer")
 
 [node name="Spineboy" type="Node2D" parent="."]
-material = SubResource("ShaderMaterial_skc1s")
+material = SubResource("ShaderMaterial_b1ldj")
 position = Vector2(474, 506)
 scale = Vector2(0.561, 0.561)
 script = ExtResource("2_2ahvi")
@@ -33,8 +33,8 @@ time_scale = 0.1
 default_animation = "run"
 
 [node name="SpineSpriteAttachment" type="Node2D" parent="Spineboy"]
-position = Vector2(-60.5043, -304.04)
-rotation = -2.93282
+position = Vector2(58.6596, -229.709)
+rotation = 0.933526
 script = ExtResource("7_wccbm")
 slot = "gun"
 

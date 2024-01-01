@@ -116,8 +116,12 @@ var _is_ready := false
 var _skin_names = null
 var _bone_names = null
 var _slot_names = null
+var _slots      = null
 
 var _active_animations:Dictionary = {}
+var _attachments:Array[SpineSpriteAttachment] = []
+var _staged_attachments:Array = []
+var _attachments_staged := false
 
 func _ready():
 	material = ShaderMaterial.new()
@@ -212,6 +216,8 @@ func is_ready()->bool:
 			set_animation( default_animation, true )
 
 	data.set_time_scale( time_scale )
+
+	if not _attachments_staged: _stage_attachments()
 
 	if not Engine.is_editor_hint():
 		# Don't cache the result in the Editor because the linked resources can be altered.
@@ -310,7 +316,7 @@ func get_slot_names()->Array[String]:
 	var result:Array[String] = []
 	if not is_ready(): return result
 
-	var slots = data.get_slots()
+	var slots = get_slots()
 	for slot_pointer in slots:
 		result.push_back( data.get_slot_name(slot_pointer) )
 
@@ -318,6 +324,14 @@ func get_slot_names()->Array[String]:
 
 	_slot_names = result
 	return result
+
+## Returns an alphabetized array of all slot names.
+func get_slots()->Array:
+	if _slots: return _slots
+	if not is_ready(): return []
+
+	_slots = data.get_slots()
+	return _slots
 
 ## Returns the position of the specified slot.
 func get_slot_position( slot_pointer:int )->Vector2:
@@ -328,6 +342,16 @@ func get_slot_position( slot_pointer:int )->Vector2:
 func get_slot_rotation( slot_pointer:int )->float:
 	if is_ready(): return data.get_slot_rotation( slot_pointer )
 	else:          return 0
+
+func register_attachment( attachment:SpineSpriteAttachment ):
+	_attachments.push_back( attachment )
+	_attachments_staged = false
+	_is_ready = false
+
+func deregister_attachment( attachment:SpineSpriteAttachment ):
+	_attachments.erase( attachment )
+	_attachments_staged = false
+	_is_ready = false
 
 ## Replaces any existing animation on the specified track.
 func set_animation( name:String, looping:bool=false, track_index:int=0, time_scale:float=1 ):
@@ -554,4 +578,25 @@ func _reset():
 	_skin_names = null
 	_bone_names = null
 	_slot_names = null
+	_slots      = null
+	_attachments_staged = false
 	changed.emit()
+
+func _stage_attachments():
+	_attachments_staged = true
+
+	var slots = get_slots()
+	_staged_attachments.clear()
+	_staged_attachments.resize( slots.size() )
+	for attachment in _attachments:
+		if attachment.is_ready():
+			var slot_pointer = attachment._slot_pointer
+			var i = slots.find( slot_pointer )  # slots are in drawing order
+			if i >= 0:
+				var list = _staged_attachments[i]
+				if not list:
+					list = []
+					_staged_attachments[i] = list
+				list.push_back( attachment )
+	prints(_staged_attachments)
+

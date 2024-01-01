@@ -23,16 +23,16 @@ func _enter_tree():
 	if parent is SpineSprite:
 		if not parent.changed.is_connected( _on_sprite_changed ): parent.changed.connect( _on_sprite_changed )
 		if not parent.updated.is_connected( _on_sprite_updated ): parent.updated.connect( _on_sprite_updated )
+		parent.register_attachment( self )
 	_slot_pointer = 0
-	set_notify_transform( true )
 
 func _exit_tree():
 	var parent = get_parent()
 	if parent is SpineSprite:
 		if parent.changed.is_connected( _on_sprite_changed ): parent.changed.disconnect( _on_sprite_changed )
 		if parent.updated.is_connected( _on_sprite_changed ): parent.updated.disconnect( _on_sprite_updated )
+		parent.deregister_attachment( self )
 	_slot_pointer = 0
-	set_notify_transform( false )
 
 func _get_slot_names()->Array[String]:
 	var parent = get_parent()
@@ -59,9 +59,6 @@ func _on_sprite_changed():
 	_slot_pointer = 0
 
 func _on_sprite_updated():
-	pass
-
-func _process( _dt ):
 	if is_ready():
 		var parent = get_parent()
 		position = parent.get_slot_position(_slot_pointer)
