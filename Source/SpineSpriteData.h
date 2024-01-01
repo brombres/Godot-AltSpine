@@ -69,6 +69,7 @@ class SpineSpriteData : public RefCounted
     void    configure( Node* spine_sprite );
     void    draw( SurfaceTool* mesh_builder, Variant on_draw_callback );
     int64_t find_bone( String bone_name );
+    int64_t find_slot( String slot_name );
     String  get_bone_name( int64_t bone_pointer );
     Vector2 get_bone_position( int64_t bone_pointer );
     float   get_bone_rotation( int64_t bone_pointer );
@@ -81,6 +82,10 @@ class SpineSpriteData : public RefCounted
     int64_t get_skin();
     String  get_skin_name( int64_t skin_pointer );
     Array   get_skins();
+    String  get_slot_name( int64_t slot_pointer );
+    Vector2 get_slot_position( int64_t slot_pointer );
+    float   get_slot_rotation( int64_t slot_pointer );
+    Array   get_slots();
     float   get_time_scale();
     bool    is_ready();
     void    reset();

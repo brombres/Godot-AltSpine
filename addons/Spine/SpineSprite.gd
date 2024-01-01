@@ -115,6 +115,7 @@ var _materials:Array[Material] = []
 var _is_ready := false
 var _skin_names = null
 var _bone_names = null
+var _slot_names = null
 
 var _active_animations:Dictionary = {}
 
@@ -243,9 +244,14 @@ func clear_tracks( tracks=null ):
 		else:
 			data.clear_tracks()
 
-## Returns the integer pointer to the bone with the specified name or 0 if not found.
+## Returns an integer pointer to the bone with the specified name or 0 if not found.
 func find_bone( bone_name:String )->int:
 	if is_ready(): return data.find_bone( bone_name )
+	else:          return 0
+
+## Returns an integer pointer to the slot with the specified name or 0 if not found.
+func find_slot( slot_name:String )->int:
+	if is_ready(): return data.find_slot( slot_name )
 	else:          return 0
 
 ## Returns the position of the specified bone.
@@ -281,7 +287,7 @@ func get_point_attachment( slot_name:String, attachment_name:String )->Variant:
 	if not attachment_id: return 0
 	return SpinePointAttachment.new( self, attachment_id, slot_name )
 
-## Returns an array of all available skin names.
+## Returns an alphabetized array of all available skin names.
 func get_skin_names()->Array[String]:
 	if _skin_names: return _skin_names
 
@@ -296,6 +302,32 @@ func get_skin_names()->Array[String]:
 
 	_skin_names = result
 	return result
+
+## Returns an alphabetized array of all slot names.
+func get_slot_names()->Array[String]:
+	if _slot_names: return _slot_names
+
+	var result:Array[String] = []
+	if not is_ready(): return result
+
+	var slots = data.get_slots()
+	for slot_pointer in slots:
+		result.push_back( data.get_slot_name(slot_pointer) )
+
+	result.sort_custom( func(a, b): return a.naturalnocasecmp_to(b) < 0 )
+
+	_slot_names = result
+	return result
+
+## Returns the position of the specified slot.
+func get_slot_position( slot_pointer:int )->Vector2:
+	if is_ready(): return data.get_slot_position( slot_pointer )
+	else:          return Vector2(0,0)
+
+## Returns the rotation of the specified slot.
+func get_slot_rotation( slot_pointer:int )->float:
+	if is_ready(): return data.get_slot_rotation( slot_pointer )
+	else:          return 0
 
 ## Replaces any existing animation on the specified track.
 func set_animation( name:String, looping:bool=false, track_index:int=0, time_scale:float=1 ):
@@ -521,4 +553,5 @@ func _reset():
 			set_animation( default_animation, true )
 	_skin_names = null
 	_bone_names = null
+	_slot_names = null
 	changed.emit()

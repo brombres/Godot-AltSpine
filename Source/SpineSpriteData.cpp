@@ -212,6 +212,12 @@ int64_t SpineSpriteData::find_bone( String bone_name )
   return (int64_t)(intptr_t)skeleton->findBone( (const char*)bone_name.utf8() );
 }
 
+int64_t SpineSpriteData::find_slot( String slot_name )
+{
+  if ( !skeleton ) return 0;
+  return (int64_t)(intptr_t)skeleton->findSlot( (const char*)slot_name.utf8() );
+}
+
 String SpineSpriteData::get_bone_name( int64_t bone_pointer )
 {
   if ( !bone_pointer ) return "null";
@@ -330,6 +336,45 @@ Array SpineSpriteData::get_skins()
   return result;
 }
 
+String SpineSpriteData::get_slot_name( int64_t slot_pointer )
+{
+  if ( !slot_pointer ) return "null";
+  spine::String name = ((spine::Slot*)(intptr_t)slot_pointer)->getData().getName();
+  return (const char*) name.buffer();
+}
+
+Vector2 SpineSpriteData::get_slot_position( int64_t slot_pointer )
+{
+  if ( !slot_pointer ) return Vector2( 0, 0 );
+  spine::Slot* slot = (spine::Slot*)(intptr_t)slot_pointer;
+  float x, y;
+  slot->getBone().localToWorld( 0, 0, x, y );
+  return Vector2( x, -y );
+}
+
+
+float SpineSpriteData::get_slot_rotation( int64_t slot_pointer )
+{
+  if ( !slot_pointer ) return 0;
+  spine::Slot* slot = (spine::Slot*)(intptr_t)slot_pointer;
+  spine::Bone &bone = slot->getBone();
+  return bone.localToWorldRotation(bone.getRotation()) * -spine::MathUtil::Deg_Rad;
+}
+
+Array SpineSpriteData::get_slots()
+{
+  Array result;
+  if ( !skeleton ) return result;
+
+  spine::Vector<spine::Slot*> slots = skeleton->getSlots();
+  for (int i=0; i<slots.size(); ++i)
+  {
+    result.push_back( (int64_t)(intptr_t)slots[i] );
+  }
+
+  return result;
+}
+
 float SpineSpriteData::get_time_scale()
 {
   return animation_state && animation_state->getTimeScale();
@@ -406,7 +451,7 @@ void SpineSpriteData::set_bone_position( int64_t bone_pointer, Vector2 position 
   if ( !bone_pointer ) return;
   spine::Bone* bone = (spine::Bone*)(intptr_t)bone_pointer;
 
-  // I don't understand how to use setWorldX/worldToLocal() etc., but this works. --Abe
+  // I don't understand how to use setWorldX/worldToLocal() etc., but this works. --Brom
   float x =  position.x + (bone->getX() - bone->getWorldX());
   float y = -position.y + (bone->getY() - bone->getWorldY());
   bone->setX( x );
@@ -540,6 +585,7 @@ void SpineSpriteData::_bind_methods()
 	ClassDB::bind_method( D_METHOD("configure","spine_sprite"),	              &SpineSpriteData::configure );
 	ClassDB::bind_method( D_METHOD("draw","mesh_builder","on_draw_callback"), &SpineSpriteData::draw );
 	ClassDB::bind_method( D_METHOD("find_bone","bone_name"),                  &SpineSpriteData::find_bone );
+	ClassDB::bind_method( D_METHOD("find_slot","slot_name"),                  &SpineSpriteData::find_slot );
 	ClassDB::bind_method( D_METHOD("get_bone_name","bone_pointer"),           &SpineSpriteData::get_bone_name );
 	ClassDB::bind_method( D_METHOD("get_bone_position","bone_pointer"),       &SpineSpriteData::get_bone_position );
 	ClassDB::bind_method( D_METHOD("get_bone_rotation","bone_pointer"),       &SpineSpriteData::get_bone_rotation );
@@ -553,9 +599,13 @@ void SpineSpriteData::_bind_methods()
                         &SpineSpriteData::get_point_attachment_position );
 	ClassDB::bind_method( D_METHOD("get_point_attachment_rotation","attachment_pointer","slot_name"),
                         &SpineSpriteData::get_point_attachment_rotation );
-	ClassDB::bind_method( D_METHOD("get_skin"),                               &SpineSpriteData::get_skin );
+	ClassDB::bind_method( D_METHOD("get_skin"),                                 &SpineSpriteData::get_skin );
 	ClassDB::bind_method( D_METHOD("get_skin_name"),                            &SpineSpriteData::get_skin_name ),
 	ClassDB::bind_method( D_METHOD("get_skins"),                                &SpineSpriteData::get_skins );
+	ClassDB::bind_method( D_METHOD("get_slot_name"),                            &SpineSpriteData::get_slot_name );
+	ClassDB::bind_method( D_METHOD("get_slot_position","slot_pointer"),         &SpineSpriteData::get_slot_position );
+	ClassDB::bind_method( D_METHOD("get_slot_rotation","slot_pointer"),         &SpineSpriteData::get_slot_rotation );
+	ClassDB::bind_method( D_METHOD("get_slots"),                                &SpineSpriteData::get_slots );
 	ClassDB::bind_method( D_METHOD("get_time_scale"),                           &SpineSpriteData::get_time_scale );
 	ClassDB::bind_method( D_METHOD("is_ready"),	                                &SpineSpriteData::is_ready );
 	ClassDB::bind_method( D_METHOD("reset"),                                    &SpineSpriteData::reset );
