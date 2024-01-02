@@ -75,7 +75,7 @@ void SpineSpriteData::configure( Node* spine_sprite )
   this->spine_sprite = spine_sprite;
 }
 
-void SpineSpriteData::draw( SurfaceTool* mesh_builder, Variant on_draw_callback )
+void SpineSpriteData::draw( SurfaceTool* mesh_builder, Array staged_attachments, Variant construct_fragment_callback )
 {
   int vertex_count = 0;
   int texture_index = 0;
@@ -85,123 +85,146 @@ void SpineSpriteData::draw( SurfaceTool* mesh_builder, Variant on_draw_callback 
 	// MULTIPLY = 2
 	// SCREEN   = 3
 
-  for (size_t slot_index=0, n=skeleton->getSlots().size(); slot_index < n; ++slot_index)
+  size_t slot_count = skeleton->getSlots().size();
+  bool has_attachment_nodes = (staged_attachments.size() == slot_count);
+
+  int draw_order = 0;
+  for (size_t slot_index=0, n=slot_count; slot_index < n; ++slot_index)
   {
     spine::Slot* slot = skeleton->getDrawOrder()[slot_index];
 
     spine::Attachment* attachment = slot->getAttachment();
-    if (!attachment) continue;
-
-    int new_blend_mode;
-    switch (slot->getData().getBlendMode())
+    if (attachment)
     {
-      case spine::BlendMode_Normal:   new_blend_mode = 0; break;
-      case spine::BlendMode_Additive: new_blend_mode = 1; break;
-      case spine::BlendMode_Multiply: new_blend_mode = 2; break;
-      case spine::BlendMode_Screen:   new_blend_mode = 3; break;
-      default:                        new_blend_mode = 0;
-    }
-
-    if (new_blend_mode != blend_mode && vertex_count)
-    {
-      on_draw_callback.call( "call", texture_index, blend_mode );
-      vertex_count = 0;
-    }
-    blend_mode = new_blend_mode;
-
-    spine::Color skeletonColor = skeleton->getColor();
-    spine::Color slotColor = slot->getColor();
-    godot::Color tint( skeletonColor.r*slotColor.r, skeletonColor.g*slotColor.g, skeletonColor.b*slotColor.b, skeletonColor.a*slotColor.a );
-
-    if (attachment->getRTTI().isExactly(spine::RegionAttachment::rtti))
-    {
-      spine::RegionAttachment* region = (spine::RegionAttachment*)attachment;
-
-      vertex_data.setSize( 8, 0.0f );  // 8 floats to hold 4 (x,y) vertices
-      region->computeWorldVertices( *slot, vertex_data, 0 );
-
-			int new_texture_index = (int)(intptr_t)(((spine::AtlasRegion*)region->getRegion())->page->texture);
-      if (new_texture_index != texture_index && vertex_count)
+      int new_blend_mode;
+      switch (slot->getData().getBlendMode())
       {
-        on_draw_callback.call( "call", texture_index, blend_mode );
+        case spine::BlendMode_Normal:   new_blend_mode = 0; break;
+        case spine::BlendMode_Additive: new_blend_mode = 1; break;
+        case spine::BlendMode_Multiply: new_blend_mode = 2; break;
+        case spine::BlendMode_Screen:   new_blend_mode = 3; break;
+        default:                        new_blend_mode = 0;
+      }
+
+      if (new_blend_mode != blend_mode && vertex_count)
+      {
+        construct_fragment_callback.call( "call", texture_index, blend_mode, draw_order++ );
         vertex_count = 0;
       }
-      texture_index = new_texture_index;
+      blend_mode = new_blend_mode;
 
-      spine::Color attachment_color = region->getColor();
-			tint.r *= attachment_color.r;
-			tint.g *= attachment_color.g;
-			tint.b *= attachment_color.b;
-			tint.a *= attachment_color.a;
+      spine::Color skeletonColor = skeleton->getColor();
+      spine::Color slotColor = slot->getColor();
+      godot::Color tint( skeletonColor.r*slotColor.r, skeletonColor.g*slotColor.g, skeletonColor.b*slotColor.b, skeletonColor.a*slotColor.a );
 
-      // Add vertex, UV, and color information to the mesh builder.
-      float* uvs = region->getUVs().buffer();
-      float* v_buffer = vertex_data.buffer();
-      for (size_t i=0; i<8; i+=2)
+      if (attachment->getRTTI().isExactly(spine::RegionAttachment::rtti))
       {
-        mesh_builder->set_color( tint );
-        mesh_builder->set_uv( Vector2(uvs[i],uvs[i+1]) );
-        mesh_builder->add_vertex( Vector3(v_buffer[i],-v_buffer[i+1],0) );
+        spine::RegionAttachment* region = (spine::RegionAttachment*)attachment;
+
+        vertex_data.setSize( 8, 0.0f );  // 8 floats to hold 4 (x,y) vertices
+        region->computeWorldVertices( *slot, vertex_data, 0 );
+
+        int new_texture_index = (int)(intptr_t)(((spine::AtlasRegion*)region->getRegion())->page->texture);
+        if (new_texture_index != texture_index && vertex_count)
+        {
+          construct_fragment_callback.call( "call", texture_index, blend_mode, draw_order++ );
+          vertex_count = 0;
+        }
+        texture_index = new_texture_index;
+
+        spine::Color attachment_color = region->getColor();
+        tint.r *= attachment_color.r;
+        tint.g *= attachment_color.g;
+        tint.b *= attachment_color.b;
+        tint.a *= attachment_color.a;
+
+        // Add vertex, UV, and color information to the mesh builder.
+        float* uvs = region->getUVs().buffer();
+        float* v_buffer = vertex_data.buffer();
+        for (size_t i=0; i<8; i+=2)
+        {
+          mesh_builder->set_color( tint );
+          mesh_builder->set_uv( Vector2(uvs[i],uvs[i+1]) );
+          mesh_builder->add_vertex( Vector3(v_buffer[i],-v_buffer[i+1],0) );
+        }
+
+        // Add triangle vertex indices
+        mesh_builder->add_index( vertex_count+0 );
+        mesh_builder->add_index( vertex_count+1 );
+        mesh_builder->add_index( vertex_count+2 );
+        mesh_builder->add_index( vertex_count+2 );
+        mesh_builder->add_index( vertex_count+3 );
+        mesh_builder->add_index( vertex_count+0 );
+
+        vertex_count += 4;
       }
+      else if (attachment->getRTTI().isExactly(spine::MeshAttachment::rtti))
+      {
+        spine::MeshAttachment* mesh = (spine::MeshAttachment*)attachment;
 
-      // Add triangle vertex indices
-      mesh_builder->add_index( vertex_count+0 );
-      mesh_builder->add_index( vertex_count+1 );
-      mesh_builder->add_index( vertex_count+2 );
-      mesh_builder->add_index( vertex_count+2 );
-      mesh_builder->add_index( vertex_count+3 );
-      mesh_builder->add_index( vertex_count+0 );
+        vertex_data.setSize( mesh->getWorldVerticesLength(), 0.0f );
+        mesh->computeWorldVertices( *slot, vertex_data );
 
-      vertex_count += 4;
+        int new_texture_index = (int)(intptr_t)(((spine::AtlasRegion*) mesh->getRegion())->page->texture);
+        if (new_texture_index != texture_index && vertex_count)
+        {
+          // Render the current mesh_builder contents using the old texture before starting on the new indices.
+          construct_fragment_callback.call( "call", texture_index, blend_mode, draw_order++ );
+          vertex_count = 0;
+        }
+        texture_index = new_texture_index;
+
+        spine::Color attachment_color = mesh->getColor();
+        tint.r *= attachment_color.r;
+        tint.g *= attachment_color.g;
+        tint.b *= attachment_color.b;
+        tint.a *= attachment_color.a;
+
+        // Add vertex, UV, and color information to the mesh builder.
+        float* uvs = mesh->getUVs().buffer();
+        float* v_buffer = vertex_data.buffer();
+        size_t v_count  = vertex_data.size();
+        for (size_t i=0; i<v_count; i+=2)
+        {
+          mesh_builder->set_color( tint );
+          mesh_builder->set_uv( Vector2(uvs[i],uvs[i+1]) );
+          mesh_builder->add_vertex( Vector3(v_buffer[i],-v_buffer[i+1],0) );
+        }
+
+        // Add triangle vertex indices
+        spine::Vector<unsigned short> indices = mesh->getTriangles();
+        size_t index_count = indices.size();
+        for (size_t i=0; i<index_count; ++i)
+        {
+          mesh_builder->add_index( vertex_count+indices[i] );
+        }
+
+        vertex_count += (int)(vertex_data.size()/2);
+      }
     }
-    else if (attachment->getRTTI().isExactly(spine::MeshAttachment::rtti))
+
+    if (has_attachment_nodes)
     {
-      spine::MeshAttachment* mesh = (spine::MeshAttachment*)attachment;
-
-      vertex_data.setSize( mesh->getWorldVerticesLength(), 0.0f );
-      mesh->computeWorldVertices( *slot, vertex_data );
-
-			int new_texture_index = (int)(intptr_t)(((spine::AtlasRegion*) mesh->getRegion())->page->texture);
-      if (new_texture_index != texture_index && vertex_count)
+      Variant slot_list = staged_attachments[slot_index];
+      if (slot_list)
       {
-        // Render the current mesh_builder contents using the old texture before starting on the new indices.
-        on_draw_callback.call( "call", texture_index, blend_mode );
-        vertex_count = 0;
+        if (vertex_count)
+        {
+          construct_fragment_callback.call( "call", texture_index, blend_mode, draw_order++ );
+          vertex_count = 0;
+        }
+        Array list = (Array)staged_attachments[slot_index];
+        for (int i=0,limit=list.size(); i<limit; ++i)
+        {
+          spine_sprite->move_child( (Node*)(Object*)list[i], draw_order++ );
+        }
       }
-      texture_index = new_texture_index;
-
-      spine::Color attachment_color = mesh->getColor();
-			tint.r *= attachment_color.r;
-			tint.g *= attachment_color.g;
-			tint.b *= attachment_color.b;
-			tint.a *= attachment_color.a;
-
-      // Add vertex, UV, and color information to the mesh builder.
-      float* uvs = mesh->getUVs().buffer();
-      float* v_buffer = vertex_data.buffer();
-      size_t v_count  = vertex_data.size();
-      for (size_t i=0; i<v_count; i+=2)
-      {
-        mesh_builder->set_color( tint );
-        mesh_builder->set_uv( Vector2(uvs[i],uvs[i+1]) );
-        mesh_builder->add_vertex( Vector3(v_buffer[i],-v_buffer[i+1],0) );
-      }
-
-      // Add triangle vertex indices
-      spine::Vector<unsigned short> indices = mesh->getTriangles();
-      size_t index_count = indices.size();
-      for (size_t i=0; i<index_count; ++i)
-      {
-        mesh_builder->add_index( vertex_count+indices[i] );
-      }
-
-      vertex_count += (int)(vertex_data.size()/2);
     }
   }
 
   if (vertex_count)
   {
-    on_draw_callback.call( "call", texture_index, blend_mode );
+    construct_fragment_callback.call( "call", texture_index, blend_mode, draw_order++ );
     vertex_count = 0;
   }
 }
@@ -583,7 +606,8 @@ void SpineSpriteData::_bind_methods()
 	ClassDB::bind_method( D_METHOD("clear_track","track_index"),              &SpineSpriteData::clear_track );
 	ClassDB::bind_method( D_METHOD("clear_tracks"),                           &SpineSpriteData::clear_tracks );
 	ClassDB::bind_method( D_METHOD("configure","spine_sprite"),	              &SpineSpriteData::configure );
-	ClassDB::bind_method( D_METHOD("draw","mesh_builder","on_draw_callback"), &SpineSpriteData::draw );
+	ClassDB::bind_method( D_METHOD("draw","mesh_builder","staged_attachments","construct_fragment_callback"),
+                        &SpineSpriteData::draw );
 	ClassDB::bind_method( D_METHOD("find_bone","bone_name"),                  &SpineSpriteData::find_bone );
 	ClassDB::bind_method( D_METHOD("find_slot","slot_name"),                  &SpineSpriteData::find_slot );
 	ClassDB::bind_method( D_METHOD("get_bone_name","bone_pointer"),           &SpineSpriteData::get_bone_name );

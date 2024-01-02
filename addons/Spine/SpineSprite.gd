@@ -326,7 +326,7 @@ func get_slot_names()->Array[String]:
 	return result
 
 ## Returns an alphabetized array of all slot names.
-func get_slots()->Array[int]:
+func get_slots()->Array:
 	if _slots: return _slots
 	if not is_ready(): return []
 
@@ -348,7 +348,7 @@ func register_attachment( attachment:SpineSpriteAttachment ):
 	_attachments_staged = false
 	_is_ready = false
 
-func deregister_attachment( attachment:SpineSpriteFragment ):
+func deregister_attachment( attachment:SpineSpriteAttachment ):
 	_attachments.erase( attachment )
 	_attachments_staged = false
 	_is_ready = false
@@ -402,7 +402,7 @@ func _process( _dt:float ):
 		_mesh_builder.clear()
 		_mesh_builder.begin( Mesh.PRIMITIVE_TRIANGLES )
 
-		data.draw( _mesh_builder, _construct_fragment )
+		data.draw( _mesh_builder, _staged_attachments, _construct_fragment )
 
 		while _used_fragment_count < _fragments.size():
 			_fragments[_used_fragment_count].visible = false
@@ -410,11 +410,10 @@ func _process( _dt:float ):
 
 		updated.emit()
 
-func _construct_fragment( texture_index:int, blend_mode:BlendMode ):
+func _construct_fragment( texture_index:int, blend_mode:BlendMode, draw_order:int ):
 	var atlas = definition.atlas
 	if texture_index < atlas.textures.size():
 		var texture = atlas.textures[texture_index]
-		#var normal_map = atlas.normal_maps[texture_index] if texture_index < atlas.normal_maps.size() else null
 
 		var fragment:SpineSpriteFragment
 		if _used_fragment_count <  _fragments.size():
@@ -427,6 +426,7 @@ func _construct_fragment( texture_index:int, blend_mode:BlendMode ):
 
 		fragment.visible = true
 		fragment.update_mesh( _mesh_builder, _materials[int(blend_mode)], texture )
+		move_child( fragment, draw_order )
 
 	_mesh_builder.clear()
 	_mesh_builder.begin( Mesh.PRIMITIVE_TRIANGLES )
@@ -582,22 +582,22 @@ func _reset():
 	_attachments_staged = false
 	changed.emit()
 
-func _stage_attachment( attachment:SpineSpriteAttachment ):
-	if not attachment.is_ready(): return
-	var slot_pointer = attachment._slot_pointer
-	var i = get_slots().find( slot_pointer )  # slots are in drawing order
-	if (i == -1) return
-	var list = _staged_attachments[i]
-	if not list:
-		list = []
-		_staged_attachments[i] = list
-	list.push_back( attachment )
-
 func _stage_attachments():
 	_attachments_staged = true
 
-	var slots = data.get_slots()
 	_staged_attachments.clear()
-	_staged_attachments.resize( slots.size )
-	for attachment in _attachments: _stage_attachment( attachment )
+	if _attachments.size() == 0: return
+
+	var slots = get_slots()
+	_staged_attachments.resize( slots.size() )
+	for attachment in _attachments:
+		if attachment.is_ready():
+			var slot_pointer = attachment._slot_pointer
+			var i = slots.find( slot_pointer )  # slots are in drawing order
+			if i >= 0:
+				var list = _staged_attachments[i]
+				if not list:
+					list = []
+					_staged_attachments[i] = list
+				list.push_back( attachment )
 

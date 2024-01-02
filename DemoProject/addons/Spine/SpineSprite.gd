@@ -34,6 +34,7 @@ const SpineSpriteFragment = preload( "SpineSpriteFragment.gd" )
 const SpineAnimationEvent = preload( "SpineAnimationEvent.gd" )
 const SpineSkin = preload( "SpineSkin.gd" )
 const SpinePointAttachment = preload( "SpinePointAttachment.gd" )
+const SpineSpriteAttachment = preload( "SpineSpriteAttachment.gd" )
 const screen_shader = preload( "SpineScreenBlendShader.gdshader" )
 
 ## A resource that contains references to a pair of [SpineSkeletonResource] and [SpineAtlasResource] resources.
@@ -402,7 +403,7 @@ func _process( _dt:float ):
 		_mesh_builder.clear()
 		_mesh_builder.begin( Mesh.PRIMITIVE_TRIANGLES )
 
-		data.draw( _mesh_builder, _construct_fragment )
+		data.draw( _mesh_builder, _staged_attachments, _construct_fragment )
 
 		while _used_fragment_count < _fragments.size():
 			_fragments[_used_fragment_count].visible = false
@@ -410,11 +411,10 @@ func _process( _dt:float ):
 
 		updated.emit()
 
-func _construct_fragment( texture_index:int, blend_mode:BlendMode ):
+func _construct_fragment( texture_index:int, blend_mode:BlendMode, draw_order:int ):
 	var atlas = definition.atlas
 	if texture_index < atlas.textures.size():
 		var texture = atlas.textures[texture_index]
-		#var normal_map = atlas.normal_maps[texture_index] if texture_index < atlas.normal_maps.size() else null
 
 		var fragment:SpineSpriteFragment
 		if _used_fragment_count <  _fragments.size():
@@ -427,6 +427,7 @@ func _construct_fragment( texture_index:int, blend_mode:BlendMode ):
 
 		fragment.visible = true
 		fragment.update_mesh( _mesh_builder, _materials[int(blend_mode)], texture )
+		move_child( fragment, draw_order )
 
 	_mesh_builder.clear()
 	_mesh_builder.begin( Mesh.PRIMITIVE_TRIANGLES )
@@ -585,8 +586,10 @@ func _reset():
 func _stage_attachments():
 	_attachments_staged = true
 
-	var slots = get_slots()
 	_staged_attachments.clear()
+	if _attachments.size() == 0: return
+
+	var slots = get_slots()
 	_staged_attachments.resize( slots.size() )
 	for attachment in _attachments:
 		if attachment.is_ready():
@@ -598,5 +601,4 @@ func _stage_attachments():
 					list = []
 					_staged_attachments[i] = list
 				list.push_back( attachment )
-	prints(_staged_attachments)
 

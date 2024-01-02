@@ -67,7 +67,7 @@ class SpineSpriteData : public RefCounted
     void    clear_track( int track_index );
     void    clear_tracks();
     void    configure( Node* spine_sprite );
-    void    draw( SurfaceTool* mesh_builder, Variant on_draw_callback );
+    void    draw( SurfaceTool* mesh_builder, Array staged_attachments, Variant construct_fragment_callback );
     int64_t find_bone( String bone_name );
     int64_t find_slot( String slot_name );
     String  get_bone_name( int64_t bone_pointer );

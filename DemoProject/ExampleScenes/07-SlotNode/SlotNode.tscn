@@ -1,4 +1,4 @@
-[gd_scene load_steps=11 format=3 uid="uid://cga12kinq7e6c"]
+[gd_scene load_steps=17 format=3 uid="uid://cga12kinq7e6c"]
 
 [ext_resource type="Shader" path="res://addons/Spine/SpineScreenBlendShader.gdshader" id="1_cbfl2"]
 [ext_resource type="Script" path="res://ExampleScenes/07-SlotNode/SlotNode.gd" id="1_wrqer"]
@@ -6,13 +6,31 @@
 [ext_resource type="Resource" uid="uid://dlvw0jkib36jp" path="res://Assets/Spineboy/Spineboy.atlas" id="3_iy6e5"]
 [ext_resource type="Script" path="res://addons/Spine/SpineSpriteDefinition.gd" id="4_j5kfh"]
 [ext_resource type="Resource" uid="uid://brgi0wmbkmbeo" path="res://Assets/Spineboy/Spineboy.skel" id="5_a4nns"]
-[ext_resource type="Script" path="res://ExampleScenes/07-SlotNode/SpineSpriteAttachment.gd" id="7_wccbm"]
+[ext_resource type="Script" path="res://addons/Spine/SpineSpriteAttachment.gd" id="7_wccbm"]
 [ext_resource type="Texture2D" uid="uid://dgll4jrderuh" path="res://icon.svg" id="8_2efac"]
+[ext_resource type="Resource" uid="uid://mnqhrc7qfjci" path="res://Assets/Raptor/Raptor.atlas" id="8_uh51x"]
+[ext_resource type="Resource" uid="uid://3us2pmoy53vu" path="res://Assets/Raptor/Raptor.skel" id="9_1f6rv"]
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_b1ldj"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_prmjm"]
 shader = ExtResource("1_cbfl2")
 
 [sub_resource type="Resource" id="Resource_tg60c"]
+script = ExtResource("4_j5kfh")
+skeleton = ExtResource("5_a4nns")
+atlas = ExtResource("3_iy6e5")
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_ctyu0"]
+shader = ExtResource("1_cbfl2")
+
+[sub_resource type="Resource" id="Resource_gwkk7"]
+script = ExtResource("4_j5kfh")
+skeleton = ExtResource("9_1f6rv")
+atlas = ExtResource("8_uh51x")
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_5t12y"]
+shader = ExtResource("1_cbfl2")
+
+[sub_resource type="Resource" id="Resource_koacd"]
 script = ExtResource("4_j5kfh")
 skeleton = ExtResource("5_a4nns")
 atlas = ExtResource("3_iy6e5")
@@ -21,7 +39,7 @@ atlas = ExtResource("3_iy6e5")
 script = ExtResource("1_wrqer")
 
 [node name="Spineboy" type="Node2D" parent="."]
-material = SubResource("ShaderMaterial_b1ldj")
+material = SubResource("ShaderMaterial_prmjm")
 position = Vector2(474, 506)
 scale = Vector2(0.561, 0.561)
 script = ExtResource("2_2ahvi")
@@ -32,13 +50,47 @@ default_skin = {
 time_scale = 0.1
 default_animation = "run"
 
-[node name="SpineSpriteAttachment" type="Node2D" parent="Spineboy"]
-position = Vector2(58.6596, -229.709)
-rotation = 0.933526
+[node name="GunAttachment" type="Node2D" parent="Spineboy"]
+position = Vector2(-59.4735, -308.983)
+rotation = -2.93588
 script = ExtResource("7_wccbm")
 slot = "gun"
 
-[node name="Icon" type="Sprite2D" parent="Spineboy/SpineSpriteAttachment"]
-position = Vector2(100, -170)
-scale = Vector2(1.78253, 1.78253)
+[node name="Raptor" type="Node2D" parent="Spineboy/GunAttachment"]
+material = SubResource("ShaderMaterial_ctyu0")
+position = Vector2(85, -68)
+scale = Vector2(0.193, 0.193)
+script = ExtResource("2_2ahvi")
+definition = SubResource("Resource_gwkk7")
+default_skin = {
+"default": false
+}
+default_animation = "walk"
+
+[node name="EyeAttachment" type="Node2D" parent="Spineboy"]
+position = Vector2(76.33, -353.112)
+rotation = -1.54059
+script = ExtResource("7_wccbm")
+slot = "eye"
+
+[node name="Icon" type="Sprite2D" parent="Spineboy/EyeAttachment"]
+position = Vector2(95.5894, 21.2773)
+rotation = 1.5708
 texture = ExtResource("8_2efac")
+
+[node name="FrontFistAttachment" type="Node2D" parent="Spineboy"]
+position = Vector2(131.535, -282.085)
+rotation = -0.605581
+script = ExtResource("7_wccbm")
+slot = "front-fist"
+
+[node name="TinySpineboy" type="Node2D" parent="Spineboy/FrontFistAttachment"]
+material = SubResource("ShaderMaterial_5t12y")
+position = Vector2(-2.646, -10.811)
+scale = Vector2(0.193, 0.193)
+script = ExtResource("2_2ahvi")
+definition = SubResource("Resource_koacd")
+default_skin = {
+"default": false
+}
+default_animation = "walk"
