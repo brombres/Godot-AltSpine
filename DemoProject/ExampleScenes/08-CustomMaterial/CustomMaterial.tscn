@@ -1,0 +1,33 @@
+[gd_scene load_steps=10 format=3 uid="uid://qhkaeh6oeki1"]
+
+[ext_resource type="Shader" path="res://addons/Spine/SpineScreenBlendShader.gdshader" id="1_l7wi3"]
+[ext_resource type="Script" path="res://addons/Spine/SpineSprite.gd" id="2_rx85n"]
+[ext_resource type="Resource" uid="uid://dlvw0jkib36jp" path="res://Assets/Spineboy/Spineboy.atlas" id="3_vxaxm"]
+[ext_resource type="Script" path="res://addons/Spine/SpineSpriteDefinition.gd" id="4_xnnd7"]
+[ext_resource type="Resource" uid="uid://brgi0wmbkmbeo" path="res://Assets/Spineboy/Spineboy.skel" id="5_tpjsg"]
+[ext_resource type="Shader" path="res://ExampleScenes/08-CustomMaterial/CustomMaterialShader.gdshader" id="6_pxdik"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_k7xaj"]
+shader = ExtResource("1_l7wi3")
+
+[sub_resource type="Resource" id="Resource_ytvu0"]
+script = ExtResource("4_xnnd7")
+skeleton = ExtResource("5_tpjsg")
+atlas = ExtResource("3_vxaxm")
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_7krsn"]
+shader = ExtResource("6_pxdik")
+
+[node name="CustomMaterial" type="Node2D"]
+
+[node name="Spineboy" type="Node2D" parent="."]
+material = SubResource("ShaderMaterial_k7xaj")
+position = Vector2(501, 507)
+scale = Vector2(0.546, 0.546)
+script = ExtResource("2_rx85n")
+definition = SubResource("Resource_ytvu0")
+normal_material = SubResource("ShaderMaterial_7krsn")
+default_skin = {
+"default": false
+}
+default_animation = "walk"
