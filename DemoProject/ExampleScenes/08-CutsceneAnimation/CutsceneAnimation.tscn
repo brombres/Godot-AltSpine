@@ -1,0 +1,51 @@
+[gd_scene load_steps=13 format=3 uid="uid://bxkx5xvpxmhc8"]
+
+[ext_resource type="Script" path="res://ExampleScenes/08-CutsceneAnimation/CutsceneAnimation.gd" id="1_4fgkw"]
+[ext_resource type="Shader" path="res://addons/Spine/SpineScreenBlendShader.gdshader" id="1_onlh8"]
+[ext_resource type="Script" path="res://addons/Spine/SpineSprite.gd" id="2_0r8nl"]
+[ext_resource type="Resource" uid="uid://dlvw0jkib36jp" path="res://Assets/Spineboy/Spineboy.atlas" id="3_3yim1"]
+[ext_resource type="Script" path="res://addons/Spine/SpineSpriteDefinition.gd" id="4_gdptw"]
+[ext_resource type="Resource" uid="uid://brgi0wmbkmbeo" path="res://Assets/Spineboy/Spineboy.skel" id="5_2iag2"]
+[ext_resource type="Resource" uid="uid://mnqhrc7qfjci" path="res://Assets/Raptor/Raptor.atlas" id="6_0h37v"]
+[ext_resource type="Resource" uid="uid://3us2pmoy53vu" path="res://Assets/Raptor/Raptor.skel" id="7_xihhq"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_3udh6"]
+shader = ExtResource("1_onlh8")
+
+[sub_resource type="Resource" id="Resource_x565h"]
+script = ExtResource("4_gdptw")
+skeleton = ExtResource("5_2iag2")
+atlas = ExtResource("3_3yim1")
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_3rxro"]
+shader = ExtResource("1_onlh8")
+
+[sub_resource type="Resource" id="Resource_mmr51"]
+script = ExtResource("4_gdptw")
+skeleton = ExtResource("7_xihhq")
+atlas = ExtResource("6_0h37v")
+
+[node name="CutsceneAnimation" type="Node2D"]
+script = ExtResource("1_4fgkw")
+
+[node name="Spineboy" type="Node2D" parent="."]
+material = SubResource("ShaderMaterial_3udh6")
+position = Vector2(72, 520)
+scale = Vector2(0.324, 0.324)
+script = ExtResource("2_0r8nl")
+definition = SubResource("Resource_x565h")
+default_skin = {
+"default": false
+}
+default_animation = "(none)"
+
+[node name="Raptor" type="Node2D" parent="."]
+material = SubResource("ShaderMaterial_3rxro")
+position = Vector2(1284, 520)
+scale = Vector2(-0.329, 0.329)
+script = ExtResource("2_0r8nl")
+definition = SubResource("Resource_mmr51")
+default_skin = {
+"default": false
+}
+default_animation = "(none)"

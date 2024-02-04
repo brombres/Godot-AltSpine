@@ -1,7 +1,7 @@
 @tool
 class_name SpineSpriteAttachment extends Node2D
 
-#const SpineSprite = preload( "SpineSprite.gd" )
+const SpineSprite = preload( "SpineSprite.gd" )
 
 var slot := "" :
 	set(value):

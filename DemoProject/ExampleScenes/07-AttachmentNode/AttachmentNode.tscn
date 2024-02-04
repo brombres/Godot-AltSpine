@@ -11,7 +11,7 @@
 [ext_resource type="Resource" uid="uid://3us2pmoy53vu" path="res://Assets/Raptor/Raptor.skel" id="9_j2doj"]
 [ext_resource type="Texture2D" uid="uid://dgll4jrderuh" path="res://icon.svg" id="10_6jsve"]
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_6gawy"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_a5yo8"]
 shader = ExtResource("2_muswj")
 
 [sub_resource type="Resource" id="Resource_tg60c"]
@@ -19,7 +19,7 @@ script = ExtResource("5_7kpq7")
 skeleton = ExtResource("6_j8p23")
 atlas = ExtResource("4_drsv6")
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_otdxg"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_f6cig"]
 shader = ExtResource("2_muswj")
 
 [sub_resource type="Resource" id="Resource_gwkk7"]
@@ -27,7 +27,7 @@ script = ExtResource("5_7kpq7")
 skeleton = ExtResource("9_j2doj")
 atlas = ExtResource("8_8hddy")
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_843w8"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_heb0o"]
 shader = ExtResource("2_muswj")
 
 [sub_resource type="Resource" id="Resource_koacd"]
@@ -39,7 +39,7 @@ atlas = ExtResource("4_drsv6")
 script = ExtResource("1_l0rv1")
 
 [node name="Spineboy" type="Node2D" parent="."]
-material = SubResource("ShaderMaterial_6gawy")
+material = SubResource("ShaderMaterial_a5yo8")
 position = Vector2(474, 506)
 scale = Vector2(0.561, 0.561)
 script = ExtResource("3_ursbw")
@@ -57,7 +57,7 @@ script = ExtResource("7_aavq6")
 slot = "gun"
 
 [node name="Raptor" type="Node2D" parent="Spineboy/GunAttachment"]
-material = SubResource("ShaderMaterial_otdxg")
+material = SubResource("ShaderMaterial_f6cig")
 position = Vector2(85, -68)
 scale = Vector2(0.193, 0.193)
 script = ExtResource("3_ursbw")
@@ -85,7 +85,7 @@ script = ExtResource("7_aavq6")
 slot = "front-fist"
 
 [node name="TinySpineboy" type="Node2D" parent="Spineboy/FrontFistAttachment"]
-material = SubResource("ShaderMaterial_843w8")
+material = SubResource("ShaderMaterial_heb0o")
 position = Vector2(-2.646, -10.811)
 scale = Vector2(0.193, 0.193)
 script = ExtResource("3_ursbw")

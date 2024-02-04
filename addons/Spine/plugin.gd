@@ -18,13 +18,15 @@ func _enter_tree():
 	add_import_plugin( skeleton_importer )
 
 	add_custom_type( "SpineSpriteDefinition", "Resource",  preload("SpineSpriteDefinition.gd"), null )
-	add_custom_type( "SpineSprite",           "Node2D",    preload("SpineSprite.gd"),         load("addons/Spine/Icons/SpineSprite.svg") )
-	add_custom_type( "SpineSpriteBone",       "Node2D",    preload("SpineSpriteBone.gd"),     load("addons/Spine/Icons/SpineSprite.svg") )
+	add_custom_type( "SpineSprite",           "Node2D",    preload("SpineSprite.gd"),           load("addons/Spine/Icons/SpineSprite.svg") )
+	add_custom_type( "SpineSpriteAttachment", "Node2D",    preload("SpineSpriteAttachment.gd"), load("addons/Spine/Icons/SpineSprite.svg") )
+	add_custom_type( "SpineSpriteBone",       "Node2D",    preload("SpineSpriteBone.gd"),       load("addons/Spine/Icons/SpineSprite.svg") )
 	add_custom_type( "SpinePointAttachment", "RefCounted", preload("SpinePointAttachment.gd"), null )
 
 func _exit_tree():
 	remove_custom_type( "SpinePointAttachment" )
 	remove_custom_type( "SpineSpriteBone" )
+	remove_custom_type( "SpineSpriteAttachment" )
 	remove_custom_type( "SpineSprite" )
 	remove_custom_type( "SpineSpriteDefinition" )
 

@@ -34,6 +34,7 @@ const SpineSpriteFragment = preload( "SpineSpriteFragment.gd" )
 const SpineAnimationEvent = preload( "SpineAnimationEvent.gd" )
 const SpineSkin = preload( "SpineSkin.gd" )
 const SpinePointAttachment = preload( "SpinePointAttachment.gd" )
+const SpineSpriteAttachment = preload( "SpineSpriteAttachment.gd" )
 const screen_shader = preload( "SpineScreenBlendShader.gdshader" )
 
 ## A resource that contains references to a pair of [SpineSkeletonResource] and [SpineAtlasResource] resources.
@@ -60,16 +61,32 @@ const screen_shader = preload( "SpineScreenBlendShader.gdshader" )
 @export_group("Materials")
 
 ## Optional material to use for sprite fragments drawn in normal (mix) blending mode. If left empty then SpineSprite will use a default normal blending material.
-@export var normal_material:Material
+@export var normal_material:Material :
+	set(value):
+		if normal_material != value:
+			normal_material = value
+			_prepare_materials()
 
 ## Optional material to use for sprite fragments drawn in additive blending mode. If left empty then SpineSprite will use a default additive blending material.
-@export var additive_material:Material
+@export var additive_material:Material :
+	set(value):
+		if normal_material != value:
+			normal_material = value
+			_prepare_materials()
 
 ## Optional material to use for sprite fragments drawn in multiply blending mode. If left empty then SpineSprite will use a default multiply blending material.
-@export var multiply_material:Material
+@export var multiply_material:Material :
+	set(value):
+		if normal_material != value:
+			normal_material = value
+			_prepare_materials()
 
 ## Optional material to use for sprite fragments drawn in screen blending mode. If left empty then SpineSprite will use a default screen blending material.
-@export var screen_material:Material
+@export var screen_material:Material :
+	set(value):
+		if normal_material != value:
+			normal_material = value
+			_prepare_materials()
 
 @export_group("Skin")
 

@@ -5,9 +5,9 @@
 [ext_resource type="Resource" uid="uid://dlvw0jkib36jp" path="res://Assets/Spineboy/Spineboy.atlas" id="3_vxaxm"]
 [ext_resource type="Script" path="res://addons/Spine/SpineSpriteDefinition.gd" id="4_xnnd7"]
 [ext_resource type="Resource" uid="uid://brgi0wmbkmbeo" path="res://Assets/Spineboy/Spineboy.skel" id="5_tpjsg"]
-[ext_resource type="Shader" path="res://ExampleScenes/08-CustomMaterial/CustomMaterialShader.gdshader" id="6_pxdik"]
+[ext_resource type="Shader" path="res://ExampleScenes/09-CustomMaterial/CustomMaterialShader.gdshader" id="6_pxdik"]
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_k7xaj"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_ei1a1"]
 shader = ExtResource("1_l7wi3")
 
 [sub_resource type="Resource" id="Resource_ytvu0"]
@@ -21,7 +21,7 @@ shader = ExtResource("6_pxdik")
 [node name="CustomMaterial" type="Node2D"]
 
 [node name="Spineboy" type="Node2D" parent="."]
-material = SubResource("ShaderMaterial_k7xaj")
+material = SubResource("ShaderMaterial_ei1a1")
 position = Vector2(501, 507)
 scale = Vector2(0.546, 0.546)
 script = ExtResource("2_rx85n")
