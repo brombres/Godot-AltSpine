@@ -1,0 +1,39 @@
+[gd_scene load_steps=9 format=3 uid="uid://bw83mubo1rmb"]
+
+[ext_resource type="Shader" path="res://addons/Spine/SpineScreenBlendShader.gdshader" id="1_ffwyh"]
+[ext_resource type="Script" path="res://addons/Spine/SpineSprite.gd" id="2_adfvr"]
+[ext_resource type="Resource" uid="uid://mnqhrc7qfjci" path="res://Assets/Raptor/Raptor.atlas" id="3_qnqxb"]
+[ext_resource type="Script" path="res://addons/Spine/SpineSpriteDefinition.gd" id="4_mowe2"]
+[ext_resource type="Resource" uid="uid://3us2pmoy53vu" path="res://Assets/Raptor/Raptor.skel" id="5_anfe1"]
+[ext_resource type="Texture2D" uid="uid://ymoce8wgd6p4" path="res://Assets/Raptor/LightSprite.png" id="6_12asa"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_kwy1i"]
+shader = ExtResource("1_ffwyh")
+
+[sub_resource type="Resource" id="Resource_57m30"]
+script = ExtResource("4_mowe2")
+skeleton = ExtResource("5_anfe1")
+atlas = ExtResource("3_qnqxb")
+
+[node name="2dLighting" type="Node2D"]
+
+[node name="Raptor" type="Node2D" parent="."]
+material = SubResource("ShaderMaterial_kwy1i")
+position = Vector2(576, 506)
+scale = Vector2(0.459, 0.459)
+script = ExtResource("2_adfvr")
+definition = SubResource("Resource_57m30")
+default_skin = {
+"default": false
+}
+default_animation = "walk"
+
+[node name="PointLight2D" type="PointLight2D" parent="."]
+position = Vector2(691, 283)
+scale = Vector2(1.516, 1.516)
+color = Color(1, 0, 0, 1)
+texture = ExtResource("6_12asa")
+height = 100.0
+
+[node name="CanvasModulate" type="CanvasModulate" parent="."]
+color = Color(0.223529, 0.160784, 0.160784, 1)

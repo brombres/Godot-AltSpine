@@ -36,34 +36,35 @@ func _import( source_filepath:String, save_path:String, options:Dictionary, plat
 		var resource = preload( "SpineAtlasResource.gd" ).new()
 		resource.bytes = FileAccess.get_file_as_bytes( source_filepath )
 
-		var basename = source_filepath.get_basename()
-		var png_filepath = basename + ".png"
+		var path = source_filepath.get_base_dir()
+		var base_name = source_filepath.get_file().get_basename()
+		var png_filepath = "%s/%s.png" % [path,base_name]
 		if FileAccess.file_exists(png_filepath):
 			resource.add_color_map( load(png_filepath) )
 			for i in range(2,100):
-				png_filepath = "%s_%d.png" % [basename,i]
+				png_filepath = "%s/%s_%d.png" % [path,base_name,i]
 				if FileAccess.file_exists(png_filepath):
 					resource.add_color_map( load(png_filepath) )
 				else:
 					break
 
 			# Optional normal maps
-			png_filepath = "n_%s.png" % basename
+			png_filepath = "%s/n_%s.png" % [path,base_name]
 			if FileAccess.file_exists(png_filepath):
 				resource.add_normal_map( load(png_filepath) )
 				for i in range(2,100):
-					png_filepath = "n_%s_%d.png" % [basename,i]
+					png_filepath = "%s/n_%s_%d.png" % [path,base_name,i]
 					if FileAccess.file_exists(png_filepath):
 						resource.add_normal_map( load(png_filepath) )
 					else:
 						break
 
 			# Optional specular maps
-			png_filepath = "s_%s.png" % basename
+			png_filepath = "%s/s_%s.png" % [path,base_name]
 			if FileAccess.file_exists(png_filepath):
 				resource.add_specular_map( load(png_filepath) )
 				for i in range(2,100):
-					png_filepath = "s_%s_%d.png" % [basename,i]
+					png_filepath = "%s/s_%s_%d.png" % [path,base_name,i]
 					if FileAccess.file_exists(png_filepath):
 						resource.add_specular_map( load(png_filepath) )
 					else:
