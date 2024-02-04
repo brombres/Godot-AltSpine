@@ -10,6 +10,9 @@ Build
 /DemoProject/bin
 .godot
 
+# macOS
+.DS_Store
+
 # Rogo
 .rogo
 /Build

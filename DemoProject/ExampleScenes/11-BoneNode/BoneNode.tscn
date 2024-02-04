@@ -1,0 +1,67 @@
+[gd_scene load_steps=10 format=3 uid="uid://0vgxdvdel1pj"]
+
+[ext_resource type="Shader" path="res://addons/Spine/SpineScreenBlendShader.gdshader" id="1_5te86"]
+[ext_resource type="Script" path="res://ExampleScenes/11-BoneNode/Logic.gd" id="1_al7rs"]
+[ext_resource type="Script" path="res://addons/Spine/SpineSprite.gd" id="2_7rcjc"]
+[ext_resource type="Resource" uid="uid://dlvw0jkib36jp" path="res://Assets/Spineboy/Spineboy.atlas" id="3_1im4l"]
+[ext_resource type="Script" path="res://addons/Spine/SpineSpriteDefinition.gd" id="4_0gte1"]
+[ext_resource type="Resource" uid="uid://brgi0wmbkmbeo" path="res://Assets/Spineboy/Spineboy.skel" id="5_vt8ai"]
+[ext_resource type="Script" path="res://addons/Spine/SpineSpriteBone.gd" id="7_u4tuw"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_fn1e8"]
+shader = ExtResource("1_5te86")
+
+[sub_resource type="Resource" id="Resource_effvr"]
+script = ExtResource("4_0gte1")
+skeleton = ExtResource("5_vt8ai")
+atlas = ExtResource("3_1im4l")
+
+[node name="BoneNode" type="Node2D"]
+script = ExtResource("1_al7rs")
+
+[node name="Spineboy" type="Node2D" parent="."]
+material = SubResource("ShaderMaterial_fn1e8")
+position = Vector2(13, 569)
+scale = Vector2(0.278, 0.278)
+script = ExtResource("2_7rcjc")
+definition = SubResource("Resource_effvr")
+default_animation = "hoverboard"
+
+[node name="HoverboardCenterBone" type="Node2D" parent="Spineboy"]
+show_behind_parent = true
+position = Vector2(-10.2, -68.221)
+rotation = -0.00349066
+script = ExtResource("7_u4tuw")
+bone = "hoverboard-controller"
+mode = "Drive"
+
+[node name="CenterRay" type="RayCast2D" parent="Spineboy/HoverboardCenterBone"]
+target_position = Vector2(2.08165e-12, 10000)
+
+[node name="HoverboardTargetBone" type="Node2D" parent="Spineboy"]
+show_behind_parent = true
+position = Vector2(258.903, -71.918)
+rotation = -0.00174533
+script = ExtResource("7_u4tuw")
+bone = "board-ik"
+mode = "Drive"
+
+[node name="TargetRay" type="RayCast2D" parent="Spineboy/HoverboardTargetBone"]
+position = Vector2(-3.599, 3.593)
+target_position = Vector2(2.08165e-12, 10000)
+
+[node name="HipBone" type="Node2D" parent="Spineboy"]
+show_behind_parent = true
+position = Vector2(-53.3354, -283.563)
+rotation = -0.00174533
+script = ExtResource("7_u4tuw")
+bone = "hip"
+mode = "Drive"
+
+[node name="Polygon2D" type="Polygon2D" parent="."]
+polygon = PackedVector2Array(0, 596, 309, 471, 516, 515, 762, 447, 984, 504, 1023, 505, 1024, 596)
+
+[node name="StaticBody2D" type="StaticBody2D" parent="Polygon2D"]
+
+[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="Polygon2D/StaticBody2D"]
+polygon = PackedVector2Array(3, 592, 304, 469, 516, 514, 762, 443, 984, 499, 1252, 498, 1280, 596)
